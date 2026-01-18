@@ -203,6 +203,7 @@
     },
     {
       "parameters": {
+        "mode": "append",
         "numberInputs": 4
       },
       "id": "bdef9418-3ac0-4975-8e58-fe348e84c0d7",
