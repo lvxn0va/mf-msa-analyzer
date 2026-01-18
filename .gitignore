@@ -76,6 +76,7 @@ temp/
 
 # Background files
 Background/
+PRD Docs/
 
 # Development tools
 .agent/
