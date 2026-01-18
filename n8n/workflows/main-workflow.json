@@ -31,12 +31,6 @@
               "name": "SUBMARKET_CRITERIA_FILE_ID",
               "value": "YOUR_SUBMARKET_CRITERIA_GOOGLE_DRIVE_FILE_ID",
               "type": "string"
-            },
-            {
-              "id": "PDF_SERVICE_URL",
-              "name": "PDF_SERVICE_URL",
-              "value": "http://localhost:8000",
-              "type": "string"
             }
           ]
         },
@@ -48,7 +42,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [0, 300],
-      "notes": "=== CONFIGURATION ===\nEdit the values above to configure:\n- MSA_CRITERIA_FILE_ID: Google Drive file ID for MSA criteria\n- SUBMARKET_CRITERIA_FILE_ID: Google Drive file ID for Sub-Market criteria\n- PDF_SERVICE_URL: URL to your PDF generation service"
+      "notes": "=== CONFIGURATION ===\nEdit the values above to configure:\n- MSA_CRITERIA_FILE_ID: Google Drive file ID for MSA criteria PDF\n- SUBMARKET_CRITERIA_FILE_ID: Google Drive file ID for Sub-Market criteria PDF\n\nPDF generation uses PDF Noodle API (configure credentials separately)"
     },
     {
       "parameters": {
@@ -76,7 +70,7 @@
             {
               "id": "config",
               "name": "config",
-              "value": "={{ { MSA_CRITERIA_FILE_ID: $json.MSA_CRITERIA_FILE_ID, SUBMARKET_CRITERIA_FILE_ID: $json.SUBMARKET_CRITERIA_FILE_ID, PDF_SERVICE_URL: $json.PDF_SERVICE_URL } }}",
+              "value": "={{ { MSA_CRITERIA_FILE_ID: $json.MSA_CRITERIA_FILE_ID, SUBMARKET_CRITERIA_FILE_ID: $json.SUBMARKET_CRITERIA_FILE_ID } }}",
               "type": "object"
             }
           ]
@@ -247,12 +241,6 @@
               "name": "deal_name",
               "value": "={{ $('Extract Input Data').first().json.deal_name }}",
               "type": "string"
-            },
-            {
-              "id": "pdf_service_url",
-              "name": "pdf_service_url",
-              "value": "={{ $('Extract Input Data').first().json.config.PDF_SERVICE_URL }}",
-              "type": "string"
             }
           ]
         },
@@ -301,7 +289,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\n// Get PDF service URL from earlier node\nconst pdfServiceUrl = $('Prepare Gemini Input').first().json.pdf_service_url;\n\n// Extract content from Gemini response structure\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error(`Failed to extract Gemini response: ${e.message}. Response: ${JSON.stringify(geminiResponse).slice(0, 500)}`);\n}\n\n// Parse JSON from response\nlet heatMapJson;\ntry {\n  // Try direct parse first\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  // Try to extract JSON array from markdown code blocks\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/); \n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error(`Failed to parse JSON: ${e.message}. Content: ${responseText.slice(0, 500)}`);\n  }\n}\n\n// Validation\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error(`Heat map must contain exactly 30 items, got ${heatMapJson.length}`);\n}\n\n// Validate required fields and status values\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  \n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error(`Item ${i} (${item.id || 'unknown'}) missing required field: ${field}`);\n    }\n  }\n  \n  if (!validStatuses.includes(item.status)) {\n    throw new Error(`Item ${i} (${item.id}) has invalid status: ${item.status}. Must be GREEN, YELLOW, or RED`);\n  }\n  \n  if (item.reasoning.length < 20) {\n    console.warn(`Item ${i} (${item.id}) has short reasoning: ${item.reasoning.length} chars`);\n  }\n}\n\n// Calculate summary stats\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\n// Determine recommendation\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name,\n  pdf_service_url: pdfServiceUrl\n};"
+        "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\n// Extract content from Gemini response structure\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error(`Failed to extract Gemini response: ${e.message}. Response: ${JSON.stringify(geminiResponse).slice(0, 500)}`);\n}\n\n// Parse JSON from response\nlet heatMapJson;\ntry {\n  // Try direct parse first\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  // Try to extract JSON array from markdown code blocks\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/); \n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error(`Failed to parse JSON: ${e.message}. Content: ${responseText.slice(0, 500)}`);\n  }\n}\n\n// Validation\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error(`Heat map must contain exactly 30 items, got ${heatMapJson.length}`);\n}\n\n// Validate required fields and status values\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  \n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error(`Item ${i} (${item.id || 'unknown'}) missing required field: ${field}`);\n    }\n  }\n  \n  if (!validStatuses.includes(item.status)) {\n    throw new Error(`Item ${i} (${item.id}) has invalid status: ${item.status}. Must be GREEN, YELLOW, or RED`);\n  }\n  \n  if (item.reasoning.length < 20) {\n    console.warn(`Item ${i} (${item.id}) has short reasoning: ${item.reasoning.length} chars`);\n  }\n}\n\n// Calculate summary stats\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\n// Determine recommendation\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name\n};"
       },
       "id": "validate-heat-map",
       "name": "Validate Heat Map",
@@ -311,8 +299,20 @@
     },
     {
       "parameters": {
+        "jsCode": "// Build Heat Map HTML Report for PDF generation\nconst data = $input.first().json;\nconst heatMap = data.heat_map;\nconst dealName = data.deal_name;\nconst address = data.address;\nconst recommendation = data.recommendation;\nconst greenCount = data.green_count;\nconst yellowCount = data.yellow_count;\nconst redCount = data.red_count;\n\n// Status color mapping\nconst statusColors = {\n  'GREEN': '#22c55e',\n  'YELLOW': '#eab308',\n  'RED': '#ef4444'\n};\n\nconst statusBgColors = {\n  'GREEN': '#dcfce7',\n  'YELLOW': '#fef9c3',\n  'RED': '#fee2e2'\n};\n\n// Recommendation styling\nconst recColors = {\n  'PROCEED': { bg: '#dcfce7', text: '#166534', label: '✓ PROCEED' },\n  'CAUTION': { bg: '#fef9c3', text: '#854d0e', label: '⚠ CAUTION' },\n  'NO-GO': { bg: '#fee2e2', text: '#991b1b', label: '✗ NO-GO' }\n};\nconst rec = recColors[recommendation] || recColors['CAUTION'];\n\n// Split criteria\nconst msaCriteria = heatMap.filter(c => c.id.startsWith('msa_'));\nconst subCriteria = heatMap.filter(c => c.id.startsWith('sub_'));\n\n// Build criteria rows\nconst buildRow = (item) => `\n  <tr style=\"border-bottom: 1px solid #e5e7eb;\">\n    <td style=\"padding: 12px 8px; font-weight: 500;\">${item.id}</td>\n    <td style=\"padding: 12px 8px;\">${item.metric}</td>\n    <td style=\"padding: 12px 8px; color: #6b7280;\">${item.threshold}</td>\n    <td style=\"padding: 12px 8px;\">${item.value}</td>\n    <td style=\"padding: 12px 8px;\">\n      <span style=\"display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: ${statusBgColors[item.status]}; color: ${statusColors[item.status]};\">\n        ${item.status}\n      </span>\n    </td>\n    <td style=\"padding: 12px 8px; font-size: 13px; color: #4b5563; max-width: 300px;\">${item.reasoning}</td>\n  </tr>\n`;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    * { margin: 0; padding: 0; box-sizing: border-box; }\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937; line-height: 1.5; padding: 40px; }\n    .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }\n    .header h1 { font-size: 28px; color: #111827; margin-bottom: 8px; }\n    .header p { color: #6b7280; font-size: 16px; }\n    .summary { display: flex; justify-content: center; gap: 24px; margin: 30px 0; }\n    .summary-card { padding: 20px 30px; border-radius: 12px; text-align: center; }\n    .summary-card .number { font-size: 36px; font-weight: 700; }\n    .summary-card .label { font-size: 14px; color: #6b7280; margin-top: 4px; }\n    .recommendation { text-align: center; margin: 30px 0; padding: 20px; border-radius: 12px; }\n    .recommendation .label { font-size: 24px; font-weight: 700; }\n    .section { margin: 40px 0; }\n    .section h2 { font-size: 20px; color: #374151; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }\n    table { width: 100%; border-collapse: collapse; font-size: 14px; }\n    th { text-align: left; padding: 12px 8px; background: #f9fafb; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }\n    .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px; }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>🏢 ${dealName}</h1>\n    <p>${address}</p>\n    <p style=\"margin-top: 8px; font-size: 12px;\">Generated: ${new Date().toISOString().split('T')[0]}</p>\n  </div>\n\n  <div class=\"summary\">\n    <div class=\"summary-card\" style=\"background: #dcfce7;\">\n      <div class=\"number\" style=\"color: #166534;\">${greenCount}</div>\n      <div class=\"label\">GREEN</div>\n    </div>\n    <div class=\"summary-card\" style=\"background: #fef9c3;\">\n      <div class=\"number\" style=\"color: #854d0e;\">${yellowCount}</div>\n      <div class=\"label\">YELLOW</div>\n    </div>\n    <div class=\"summary-card\" style=\"background: #fee2e2;\">\n      <div class=\"number\" style=\"color: #991b1b;\">${redCount}</div>\n      <div class=\"label\">RED</div>\n    </div>\n  </div>\n\n  <div class=\"recommendation\" style=\"background: ${rec.bg};\">\n    <div class=\"label\" style=\"color: ${rec.text};\">${rec.label}</div>\n    <p style=\"color: ${rec.text}; margin-top: 8px;\">\n      ${recommendation === 'PROCEED' ? 'Proceed to full due diligence' : recommendation === 'CAUTION' ? 'Investment Committee review required' : 'Deal does not meet investment criteria'}\n    </p>\n  </div>\n\n  <div class=\"section\">\n    <h2>📊 MSA Criteria (${msaCriteria.length} points)</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>ID</th>\n          <th>Metric</th>\n          <th>Threshold</th>\n          <th>Value</th>\n          <th>Status</th>\n          <th>Reasoning</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${msaCriteria.map(buildRow).join('')}\n      </tbody>\n    </table>\n  </div>\n\n  <div class=\"section\">\n    <h2>📍 Sub-Market Criteria (${subCriteria.length} points)</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>ID</th>\n          <th>Metric</th>\n          <th>Threshold</th>\n          <th>Value</th>\n          <th>Status</th>\n          <th>Reasoning</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${subCriteria.map(buildRow).join('')}\n      </tbody>\n    </table>\n  </div>\n\n  <div class=\"footer\">\n    <p>AI Multifamily Deep Research Engine | 30-Point Heat Map Analysis</p>\n    <p>This report was generated automatically. Always verify data with primary sources.</p>\n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  html: html,\n  deal_name: dealName,\n  address: address,\n  recommendation: recommendation,\n  heat_map: heatMap,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount\n};"
+      },
+      "id": "build-html",
+      "name": "Build Heat Map HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, 300]
+    },
+    {
+      "parameters": {
         "method": "POST",
-        "url": "={{ $json.pdf_service_url }}/generate-pdf",
+        "url": "https://api.pdfnoodle.com/v1/html-to-pdf/sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -324,28 +324,34 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"heat_map\": {{ JSON.stringify($json.heat_map) }},\n  \"deal_name\": \"{{ $json.deal_name }}\",\n  \"address\": \"{{ $json.address }}\",\n  \"summary\": {\n    \"green_count\": {{ $json.green_count }},\n    \"yellow_count\": {{ $json.yellow_count }},\n    \"red_count\": {{ $json.red_count }},\n    \"recommendation\": \"{{ $json.recommendation }}\"\n  }\n}",
+        "jsonBody": "={\n  \"html\": {{ JSON.stringify($json.html) }},\n  \"pdfParams\": {\n    \"format\": \"A4\",\n    \"margin\": {\n      \"top\": \"20px\",\n      \"right\": \"20px\",\n      \"bottom\": \"20px\",\n      \"left\": \"20px\"\n    }\n  },\n  \"signedUrlExpiresIn\": 86400\n}",
         "options": {
-          "timeout": 30000
+          "timeout": 60000
         }
       },
       "id": "generate-pdf",
-      "name": "Generate PDF",
+      "name": "Generate PDF (PDF Noodle)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1660, 300]
+      "position": [1900, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pdfnoodle-auth",
+          "name": "PDF Noodle API"
+        }
+      }
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"success\",\n  \"deal_name\": \"{{ $('Validate Heat Map').first().json.deal_name }}\",\n  \"address\": \"{{ $('Validate Heat Map').first().json.address }}\",\n  \"analysis_summary\": {\n    \"total_criteria\": {{ $('Validate Heat Map').first().json.total_items }},\n    \"green_count\": {{ $('Validate Heat Map').first().json.green_count }},\n    \"yellow_count\": {{ $('Validate Heat Map').first().json.yellow_count }},\n    \"red_count\": {{ $('Validate Heat Map').first().json.red_count }},\n    \"recommendation\": \"{{ $('Validate Heat Map').first().json.recommendation }}\"\n  },\n  \"heat_map\": {{ JSON.stringify($('Validate Heat Map').first().json.heat_map) }},\n  \"pdf_urls\": {\n    \"heat_map\": \"{{ $('Generate PDF').first().json.heat_map_url || '' }}\",\n    \"investment_brief\": \"{{ $('Generate PDF').first().json.investment_brief_url || '' }}\"\n  },\n  \"generated_at\": \"{{ $now.toISO() }}\"\n}",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"deal_name\": \"{{ $('Build Heat Map HTML').first().json.deal_name }}\",\n  \"address\": \"{{ $('Build Heat Map HTML').first().json.address }}\",\n  \"analysis_summary\": {\n    \"total_criteria\": 30,\n    \"green_count\": {{ $('Build Heat Map HTML').first().json.green_count }},\n    \"yellow_count\": {{ $('Build Heat Map HTML').first().json.yellow_count }},\n    \"red_count\": {{ $('Build Heat Map HTML').first().json.red_count }},\n    \"recommendation\": \"{{ $('Build Heat Map HTML').first().json.recommendation }}\"\n  },\n  \"heat_map\": {{ JSON.stringify($('Build Heat Map HTML').first().json.heat_map) }},\n  \"pdf_url\": \"{{ $('Generate PDF (PDF Noodle)').first().json.signedUrl }}\",\n  \"pdf_metadata\": {{ JSON.stringify($('Generate PDF (PDF Noodle)').first().json.metadata || {}) }},\n  \"generated_at\": \"{{ $now.toISO() }}\"\n}",
         "options": {}
       },
       "id": "webhook-response",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1900, 300]
+      "position": [2140, 300]
     }
   ],
   "connections": {
@@ -478,14 +484,25 @@
       "main": [
         [
           {
-            "node": "Generate PDF",
+            "node": "Build Heat Map HTML",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Generate PDF": {
+    "Build Heat Map HTML": {
+      "main": [
+        [
+          {
+            "node": "Generate PDF (PDF Noodle)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate PDF (PDF Noodle)": {
       "main": [
         [
           {
