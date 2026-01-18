@@ -7,13 +7,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "240286ed-5274-4450-917b-246d99018a7d",
+      "id": "bb9f9c84-fe6b-4d0e-be01-10d4b7dc17b4",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        4544,
-        2304
+        4096,
+        3072
       ],
       "webhookId": "analyze-property-webhook"
     },
@@ -38,13 +38,13 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "c9f9ba26-d741-4108-84e5-cd2292ace937",
+      "id": "bc436a71-8a40-450d-994e-42320124f5de",
       "name": "Config",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4752,
-        2304
+        4304,
+        3072
       ],
       "notes": "=== CONFIGURATION ===\nEdit the values above to configure:\n- MSA_CRITERIA_FILE_ID: Google Drive file ID for MSA criteria PDF\n- SUBMARKET_CRITERIA_FILE_ID: Google Drive file ID for Sub-Market criteria PDF\n\nPDF generation uses PDF Noodle API (configure credentials separately)"
     },
@@ -80,13 +80,13 @@
         },
         "options": {}
       },
-      "id": "ec3fe08c-dffd-469e-8a4b-7b75946fd845",
+      "id": "39599339-eec5-4691-971d-11747f13e069",
       "name": "Extract Input Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        4960,
-        2304
+        4512,
+        3072
       ]
     },
     {
@@ -105,13 +105,13 @@
           }
         }
       },
-      "id": "c1acf8a9-3ec0-495b-963d-d4c462c25fa0",
+      "id": "fe7d1fbc-bc40-4375-913a-3cca9e091db1",
       "name": "Load MSA Criteria",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        5200,
-        2208
+        4752,
+        2976
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -136,13 +136,13 @@
           }
         }
       },
-      "id": "c317acc0-434b-40b5-8c15-ac51c8668428",
+      "id": "e7959851-84fb-49c8-bb6e-d59f2c818855",
       "name": "Load SubMarket Criteria",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        5200,
-        2400
+        4752,
+        3168
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -155,13 +155,13 @@
       "parameters": {
         "jsCode": "// Parse user-uploaded context documents\nconst inputData = $('Extract Input Data').first().json;\nconst contextFiles = inputData.context_files || [];\nconst parsedDocs = [];\n\nfor (const file of contextFiles) {\n  try {\n    if (file.data) {\n      const fileData = Buffer.from(file.data, 'base64').toString('utf-8');\n      parsedDocs.push({\n        filename: file.name || 'unknown',\n        content: fileData,\n        type: file.type || 'unknown'\n      });\n    }\n  } catch (error) {\n    console.error(`Failed to parse ${file.name}:`, error.message);\n  }\n}\n\nreturn {\n  context_documents: parsedDocs,\n  context_text: parsedDocs.map(d => `--- ${d.filename} ---\\n${d.content}`).join('\\n\\n'),\n  context_count: parsedDocs.length\n};"
       },
-      "id": "f99d5127-4af2-4086-9f6f-7d1d5d7d2a5d",
+      "id": "6d2c9c1e-9661-458a-8579-c27bdec045d8",
       "name": "Parse Context Docs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5200,
-        2608
+        4752,
+        3376
       ]
     },
     {
@@ -181,18 +181,18 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a real estate research analyst. Gather comprehensive demographic and market data for the specified property address. Include data for 1-mile, 3-mile, and 5-mile radii. For each data point, provide the source URL and date. Return data in JSON format with sections: msa_data (population, employment, income, vacancy, permits) and submarket_data (crime, schools, amenities, transport, growth indicators).\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Research this property address for multifamily investment analysis: {{ $('Extract Input Data').first().json.address }}. Provide comprehensive 1-3-5 mile demographic data with citations.\"\n    }\n  ],\n  \"temperature\": 0.2,\n  \"return_citations\": true\n}",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a real estate market research analyst specializing in multifamily investment analysis. Your task is to gather comprehensive demographic and market data. YOU MUST PROVIDE ACTUAL DATA VALUES - do not say you cannot find data. Use your knowledge and web search to find real statistics. For Austin, TX area you should know: population ~2.3M MSA, strong job growth, major tech hub, etc. Always return concrete numbers and statistics.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Research this property address for multifamily investment analysis: {{ $('Extract Input Data').first().json.address }}. Return a JSON object with these sections:\\n\\n1. msa_data: { population, population_growth_rate, employment_growth, median_income, unemployment_rate, vacancy_rate, multifamily_permits, absorption_rate }\\n2. submarket_data: { crime_rate_vs_msa, school_rating, nearest_amenity_distance, transit_distance, renter_percentage, historical_appreciation }\\n\\nProvide actual numeric values. For Austin TX MSA, use current data you know.\"\n    }\n  ],\n  \"temperature\": 0.2,\n  \"return_citations\": true\n}",
         "options": {
           "timeout": 60000
         }
       },
-      "id": "24e83dc5-d8c7-475d-870e-5c29dd66b627",
+      "id": "b1acf355-a2b9-4b4a-9797-58df53a891dc",
       "name": "Perplexity Research",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        5200,
-        2000
+        4752,
+        2768
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -203,71 +203,28 @@
     },
     {
       "parameters": {
-        "mode": "append",
-        "options": {
-          "numberInputs": 4
-        }
+        "numberInputs": 4
       },
-      "id": "f50c32f5-4a0b-4695-b7b6-cceb69cfa110",
+      "id": "bdef9418-3ac0-4975-8e58-fe348e84c0d7",
       "name": "Wait For All Inputs",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        5440,
-        2304
+        4992,
+        3072
       ]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "msa_criteria",
-              "name": "msa_criteria",
-              "value": "={{ $('Load MSA Criteria').first().json.data || $('Load MSA Criteria').first().binary?.data?.toString() || 'MSA Criteria not loaded' }}",
-              "type": "string"
-            },
-            {
-              "id": "submarket_criteria",
-              "name": "submarket_criteria",
-              "value": "={{ $('Load SubMarket Criteria').first().json.data || $('Load SubMarket Criteria').first().binary?.data?.toString() || 'SubMarket Criteria not loaded' }}",
-              "type": "string"
-            },
-            {
-              "id": "research_data",
-              "name": "research_data",
-              "value": "={{ $('Perplexity Research').first().json.choices?.[0]?.message?.content || 'Research data not available' }}",
-              "type": "string"
-            },
-            {
-              "id": "context_docs",
-              "name": "context_docs",
-              "value": "={{ $('Parse Context Docs').first().json.context_text || 'No context documents uploaded' }}",
-              "type": "string"
-            },
-            {
-              "id": "address",
-              "name": "address",
-              "value": "={{ $('Extract Input Data').first().json.address }}",
-              "type": "string"
-            },
-            {
-              "id": "deal_name",
-              "name": "deal_name",
-              "value": "={{ $('Extract Input Data').first().json.deal_name }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "// Prepare all inputs for Gemini - properly extract binary data from Google Drive\n\n// Helper function to extract text from Google Drive binary data\nfunction extractTextFromBinary(nodeData) {\n  try {\n    // Try to get binary data\n    const binaryData = nodeData.binary;\n    if (binaryData) {\n      // Get the first binary key (usually 'data' or filename)\n      const binaryKey = Object.keys(binaryData)[0];\n      if (binaryKey && binaryData[binaryKey]) {\n        // The data is base64 encoded\n        const base64Data = binaryData[binaryKey].data;\n        if (base64Data) {\n          return Buffer.from(base64Data, 'base64').toString('utf-8');\n        }\n      }\n    }\n    // Fallback to json.data if exists\n    if (nodeData.json && nodeData.json.data) {\n      return String(nodeData.json.data);\n    }\n    return null;\n  } catch (e) {\n    console.error('Error extracting binary:', e.message);\n    return null;\n  }\n}\n\n// Extract MSA criteria\nconst msaNode = $('Load MSA Criteria').first();\nlet msaCriteria = extractTextFromBinary(msaNode);\nif (!msaCriteria) {\n  msaCriteria = 'MSA Criteria: Evaluate population >400k, growth >1%, employment growth >1.5%, income growth >2%, job diversity, unemployment <5%, vacancy 4-6%, permits trending, absorption positive, low environmental risk, cap rate spread >150bps, landlord-friendly laws, affordability index, proximity to tier 1 MSA.';\n}\n\n// Extract SubMarket criteria\nconst subNode = $('Load SubMarket Criteria').first();\nlet subCriteria = extractTextFromBinary(subNode);\nif (!subCriteria) {\n  subCriteria = 'SubMarket Criteria: Crime below MSA average, schools rated 6+, transport avoidance >0.5mi, amenities 1-2mi (goldilocks), school proximity, transit access, path of growth, zoning protections, renter density appropriate, government stability, cluster growth, proximity to MF assets, reasonable taxes, historical appreciation >3%.';\n}\n\n// Extract research data\nconst researchNode = $('Perplexity Research').first();\nlet researchData = researchNode.json?.choices?.[0]?.message?.content || 'Research data not available';\n\n// Extract context docs\nconst contextNode = $('Parse Context Docs').first();\nlet contextDocs = contextNode.json?.context_text || 'No context documents uploaded';\n\n// Extract address and deal name\nconst inputNode = $('Extract Input Data').first();\nconst address = inputNode.json?.address || 'Address not provided';\nconst dealName = inputNode.json?.deal_name || 'Unnamed Deal';\n\nreturn {\n  msa_criteria: msaCriteria,\n  submarket_criteria: subCriteria,\n  research_data: researchData,\n  context_docs: contextDocs,\n  address: address,\n  deal_name: dealName\n};"
       },
-      "id": "5d71106e-0caf-4f1f-ac51-7553b71fb843",
+      "id": "871bdd09-1b5d-455d-9d63-147c27172768",
       "name": "Prepare Gemini Input",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        5680,
-        2304
+        5232,
+        3072
       ]
     },
     {
@@ -292,13 +249,13 @@
           "timeout": 120000
         }
       },
-      "id": "f3fb8b26-c6a5-4283-9527-33947e458d9b",
+      "id": "9ff7827c-11dd-4937-ada3-e88a7e5262e6",
       "name": "Gemini Logic Engine",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        5920,
-        2304
+        5472,
+        3072
       ],
       "credentials": {
         "httpQueryAuth": {
@@ -311,26 +268,26 @@
       "parameters": {
         "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\n// Extract content from Gemini response structure\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error(`Failed to extract Gemini response: ${e.message}. Response: ${JSON.stringify(geminiResponse).slice(0, 500)}`);\n}\n\n// Parse JSON from response\nlet heatMapJson;\ntry {\n  // Try direct parse first\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  // Try to extract JSON array from markdown code blocks\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/); \n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error(`Failed to parse JSON: ${e.message}. Content: ${responseText.slice(0, 500)}`);\n  }\n}\n\n// Validation\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error(`Heat map must contain exactly 30 items, got ${heatMapJson.length}`);\n}\n\n// Validate required fields and status values\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  \n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error(`Item ${i} (${item.id || 'unknown'}) missing required field: ${field}`);\n    }\n  }\n  \n  if (!validStatuses.includes(item.status)) {\n    throw new Error(`Item ${i} (${item.id}) has invalid status: ${item.status}. Must be GREEN, YELLOW, or RED`);\n  }\n  \n  if (item.reasoning.length < 20) {\n    console.warn(`Item ${i} (${item.id}) has short reasoning: ${item.reasoning.length} chars`);\n  }\n}\n\n// Calculate summary stats\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\n// Determine recommendation\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name\n};"
       },
-      "id": "dbc19570-5eb5-4eda-a786-a3cc19d7c6ee",
+      "id": "0034d1e6-f7eb-4c9e-b0aa-ccf4321def80",
       "name": "Validate Heat Map",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6160,
-        2304
+        5712,
+        3072
       ]
     },
     {
       "parameters": {
         "jsCode": "// Build Heat Map HTML Report for PDF generation\nconst data = $input.first().json;\nconst heatMap = data.heat_map;\nconst dealName = data.deal_name;\nconst address = data.address;\nconst recommendation = data.recommendation;\nconst greenCount = data.green_count;\nconst yellowCount = data.yellow_count;\nconst redCount = data.red_count;\n\n// Status color mapping\nconst statusColors = {\n  'GREEN': '#22c55e',\n  'YELLOW': '#eab308',\n  'RED': '#ef4444'\n};\n\nconst statusBgColors = {\n  'GREEN': '#dcfce7',\n  'YELLOW': '#fef9c3',\n  'RED': '#fee2e2'\n};\n\n// Recommendation styling\nconst recColors = {\n  'PROCEED': { bg: '#dcfce7', text: '#166534', label: '✓ PROCEED' },\n  'CAUTION': { bg: '#fef9c3', text: '#854d0e', label: '⚠ CAUTION' },\n  'NO-GO': { bg: '#fee2e2', text: '#991b1b', label: '✗ NO-GO' }\n};\nconst rec = recColors[recommendation] || recColors['CAUTION'];\n\n// Split criteria\nconst msaCriteria = heatMap.filter(c => c.id.startsWith('msa_'));\nconst subCriteria = heatMap.filter(c => c.id.startsWith('sub_'));\n\n// Build criteria rows\nconst buildRow = (item) => `\n  <tr style=\"border-bottom: 1px solid #e5e7eb;\">\n    <td style=\"padding: 12px 8px; font-weight: 500;\">${item.id}</td>\n    <td style=\"padding: 12px 8px;\">${item.metric}</td>\n    <td style=\"padding: 12px 8px; color: #6b7280;\">${item.threshold}</td>\n    <td style=\"padding: 12px 8px;\">${item.value}</td>\n    <td style=\"padding: 12px 8px;\">\n      <span style=\"display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: ${statusBgColors[item.status]}; color: ${statusColors[item.status]};\">\n        ${item.status}\n      </span>\n    </td>\n    <td style=\"padding: 12px 8px; font-size: 13px; color: #4b5563; max-width: 300px;\">${item.reasoning}</td>\n  </tr>\n`;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    * { margin: 0; padding: 0; box-sizing: border-box; }\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937; line-height: 1.5; padding: 40px; }\n    .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }\n    .header h1 { font-size: 28px; color: #111827; margin-bottom: 8px; }\n    .header p { color: #6b7280; font-size: 16px; }\n    .summary { display: flex; justify-content: center; gap: 24px; margin: 30px 0; }\n    .summary-card { padding: 20px 30px; border-radius: 12px; text-align: center; }\n    .summary-card .number { font-size: 36px; font-weight: 700; }\n    .summary-card .label { font-size: 14px; color: #6b7280; margin-top: 4px; }\n    .recommendation { text-align: center; margin: 30px 0; padding: 20px; border-radius: 12px; }\n    .recommendation .label { font-size: 24px; font-weight: 700; }\n    .section { margin: 40px 0; }\n    .section h2 { font-size: 20px; color: #374151; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }\n    table { width: 100%; border-collapse: collapse; font-size: 14px; }\n    th { text-align: left; padding: 12px 8px; background: #f9fafb; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }\n    .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px; }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>🏢 ${dealName}</h1>\n    <p>${address}</p>\n    <p style=\"margin-top: 8px; font-size: 12px;\">Generated: ${new Date().toISOString().split('T')[0]}</p>\n  </div>\n\n  <div class=\"summary\">\n    <div class=\"summary-card\" style=\"background: #dcfce7;\">\n      <div class=\"number\" style=\"color: #166534;\">${greenCount}</div>\n      <div class=\"label\">GREEN</div>\n    </div>\n    <div class=\"summary-card\" style=\"background: #fef9c3;\">\n      <div class=\"number\" style=\"color: #854d0e;\">${yellowCount}</div>\n      <div class=\"label\">YELLOW</div>\n    </div>\n    <div class=\"summary-card\" style=\"background: #fee2e2;\">\n      <div class=\"number\" style=\"color: #991b1b;\">${redCount}</div>\n      <div class=\"label\">RED</div>\n    </div>\n  </div>\n\n  <div class=\"recommendation\" style=\"background: ${rec.bg};\">\n    <div class=\"label\" style=\"color: ${rec.text};\">${rec.label}</div>\n    <p style=\"color: ${rec.text}; margin-top: 8px;\">\n      ${recommendation === 'PROCEED' ? 'Proceed to full due diligence' : recommendation === 'CAUTION' ? 'Investment Committee review required' : 'Deal does not meet investment criteria'}\n    </p>\n  </div>\n\n  <div class=\"section\">\n    <h2>📊 MSA Criteria (${msaCriteria.length} points)</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>ID</th>\n          <th>Metric</th>\n          <th>Threshold</th>\n          <th>Value</th>\n          <th>Status</th>\n          <th>Reasoning</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${msaCriteria.map(buildRow).join('')}\n      </tbody>\n    </table>\n  </div>\n\n  <div class=\"section\">\n    <h2>📍 Sub-Market Criteria (${subCriteria.length} points)</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>ID</th>\n          <th>Metric</th>\n          <th>Threshold</th>\n          <th>Value</th>\n          <th>Status</th>\n          <th>Reasoning</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${subCriteria.map(buildRow).join('')}\n      </tbody>\n    </table>\n  </div>\n\n  <div class=\"footer\">\n    <p>AI Multifamily Deep Research Engine | 30-Point Heat Map Analysis</p>\n    <p>This report was generated automatically. Always verify data with primary sources.</p>\n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  html: html,\n  deal_name: dealName,\n  address: address,\n  recommendation: recommendation,\n  heat_map: heatMap,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount\n};"
       },
-      "id": "9b9a701c-b6ff-401d-81f1-db90121a49b6",
+      "id": "c38e992a-a8e0-414a-a382-6259ce620bf7",
       "name": "Build Heat Map HTML",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6400,
-        2304
+        5952,
+        3072
       ]
     },
     {
@@ -355,13 +312,13 @@
           "timeout": 60000
         }
       },
-      "id": "e1c1cc4f-ec12-4066-b031-7c3fb48f3517",
+      "id": "3297e96e-1272-4638-b9af-65e989198322",
       "name": "Generate PDF (PDF Noodle)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6640,
-        2304
+        6192,
+        3072
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -376,13 +333,13 @@
         "responseBody": "={\n  \"status\": \"success\",\n  \"deal_name\": \"{{ $('Build Heat Map HTML').first().json.deal_name }}\",\n  \"address\": \"{{ $('Build Heat Map HTML').first().json.address }}\",\n  \"analysis_summary\": {\n    \"total_criteria\": 30,\n    \"green_count\": {{ $('Build Heat Map HTML').first().json.green_count }},\n    \"yellow_count\": {{ $('Build Heat Map HTML').first().json.yellow_count }},\n    \"red_count\": {{ $('Build Heat Map HTML').first().json.red_count }},\n    \"recommendation\": \"{{ $('Build Heat Map HTML').first().json.recommendation }}\"\n  },\n  \"heat_map\": {{ JSON.stringify($('Build Heat Map HTML').first().json.heat_map) }},\n  \"pdf_url\": \"{{ $('Generate PDF (PDF Noodle)').first().json.signedUrl }}\",\n  \"pdf_metadata\": {{ JSON.stringify($('Generate PDF (PDF Noodle)').first().json.metadata || {}) }},\n  \"generated_at\": \"{{ $now.toISO() }}\"\n}",
         "options": {}
       },
-      "id": "82c51bc8-8976-476e-a3c8-8c9dd960cd5f",
+      "id": "2c80869a-ccbf-48b2-9afc-3ad2d06a2038",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        6880,
-        2304
+        6432,
+        3072
       ]
     }
   ],
@@ -463,7 +420,7 @@
           {
             "node": "Wait For All Inputs",
             "type": "main",
-            "index": 2
+            "index": 3
           }
         ]
       ]
@@ -474,7 +431,7 @@
           {
             "node": "Wait For All Inputs",
             "type": "main",
-            "index": 3
+            "index": 2
           }
         ]
       ]
