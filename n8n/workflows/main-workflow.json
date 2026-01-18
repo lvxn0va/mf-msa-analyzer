@@ -22,19 +22,19 @@
             {
               "id": "address",
               "name": "address",
-              "value": "={{ $json.body.address }}",
+              "value": "={{ $json.address }}",
               "type": "string"
             },
             {
               "id": "deal_name",
               "name": "deal_name",
-              "value": "={{ $json.body.deal_name }}",
+              "value": "={{ $json.deal_name }}",
               "type": "string"
             },
             {
               "id": "context_files",
               "name": "context_files",
-              "value": "={{ $json.body.context_files || [] }}",
+              "value": "={{ $json.context_files || [] }}",
               "type": "array"
             }
           ]
@@ -115,7 +115,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpQueryAuth",
         "sendHeaders": true,
