@@ -1,0 +1,193 @@
+CONTEXT OVERRIDE LOGIC - IMPLEMENTATION GUIDE
+==============================================
+
+PRINCIPLE: User-uploaded context documents contain PROPERTY-SPECIFIC facts that override general market data.
+
+WHY THIS MATTERS:
+- Generic market data says "County X has 2.5% property tax rate"
+- User uploads a Tax Abatement Agreement showing "0% tax for 10 years, then 0.5% for 15 years"
+- System MUST use the abatement data and mark Taxes/Fees as GREEN
+
+IMPLEMENTATION STEPS:
+
+STEP 1: IDENTIFY OVERRIDE-ELIGIBLE CRITERIA
+--------------------------------------------
+The following criteria are commonly subject to user document overrides:
+
+HIGH PRIORITY (Most common):
+- sub_12: Taxes and Fees (Tax Abatement Agreements, Chapter 353, TIF District docs)
+- msa_15: Affordability Index (Rent Rolls showing actual tenant incomes)
+- msa_9: Vacancy Rate (Rent Rolls showing actual occupancy)
+- sub_13: Historical Appreciation (Appraisal reports with historical values)
+
+MEDIUM PRIORITY:
+- sub_9: Renter Density (Neighborhood studies, resident surveys)
+- sub_1: Crime Rate (Private security reports, incident logs)
+- msa_6: Job Diversity (Major employer announcements, economic development agreements)
+
+STEP 2: DOCUMENT PARSING STRATEGY
+----------------------------------
+When user uploads context files, the AI must:
+
+1. Extract text from PDFs/images
+2. Identify document type:
+   - Tax Abatement Agreement
+   - Rent Roll (actual tenant data)
+   - Appraisal Report
+   - Economic Development Incentive
+   - Government Agreement (Chapter 353, etc.)
+   - HOA/CAM Fee Schedules
+
+3. Extract key facts:
+   - For Tax Docs: Effective rate, duration, conditions
+   - For Rent Rolls: Current occupancy %, tenant income distribution
+   - For Appraisals: Historical sale/appraisal values
+
+STEP 3: OVERRIDE APPLICATION LOGIC
+-----------------------------------
+Pseudocode:
+
+```
+for each criterion in 30_point_criteria:
+    market_data = get_from_perplexity_research(criterion)
+    override_data = search_user_docs(criterion.metric)
+
+    if override_data.found:
+        if override_data.is_more_specific_than(market_data):
+            use_value = override_data.value
+            source = f"User-uploaded: {override_data.document_name}, {override_data.section}"
+            override_applied = true
+            override_document = override_data.document_name
+        else:
+            use_value = market_data.value
+            source = market_data.source
+            override_applied = false
+    else:
+        use_value = market_data.value
+        source = market_data.source
+        override_applied = false
+
+    status = evaluate_against_threshold(use_value, criterion.threshold)
+
+    return {
+        "value": use_value,
+        "status": status,
+        "source": source,
+        "override_applied": override_applied,
+        "override_document": override_document if override_applied else null
+    }
+```
+
+STEP 4: OVERRIDE EXAMPLE SCENARIOS
+-----------------------------------
+
+SCENARIO A: Tax Abatement Override
+-----------------------------------
+MARKET DATA: "Travis County, TX property tax: 2.1% of assessed value"
+USER DOC: "Chapter 353 Agreement: 100% abatement years 1-10, 50% years 11-20, 25% years 21-25"
+CRITERION: sub_12 (Taxes/Fees, threshold <2%)
+
+LOGIC:
+- Effective rate Year 1-10: 0% ✓ GREEN
+- User doc is property-specific, overrides county average
+- Citation: "User-uploaded: Ch353_Abatement_2023.pdf, Section 4.2"
+
+OUTPUT:
+{
+  "id": "sub_12",
+  "metric": "Taxes and Fees",
+  "threshold": "<2% of property value annually",
+  "value": "0% (Years 1-10), 1.05% (Years 11-20) per abatement",
+  "status": "GREEN",
+  "reasoning": "Property benefits from Chapter 353 tax abatement providing 100% exemption for first 10 years, then 50% for years 11-20. Effective rate well below 2% threshold during entire hold period.",
+  "source": "User-uploaded: Ch353_Abatement_Agreement_2023.pdf, Section 4.2",
+  "override_applied": true,
+  "override_document": "Ch353_Abatement_Agreement_2023.pdf"
+}
+
+SCENARIO B: Rent Roll Vacancy Override
+---------------------------------------
+MARKET DATA: "Austin MSA apartment vacancy: 8.2% (CoStar Q4 2024)"
+USER DOC: "Rent Roll dated 2024-12-01: 247 occupied / 250 units = 98.8% occupancy"
+CRITERION: msa_9 (Vacancy Rate, threshold 4-6%)
+
+LOGIC:
+- Actual property vacancy: 1.2% (3/250 units)
+- Property outperforming market despite high MSA vacancy
+- User doc shows current state, overrides market average
+
+OUTPUT:
+{
+  "id": "msa_9",
+  "metric": "Apartment Vacancy Rate",
+  "threshold": "4-6% (Goldilocks)",
+  "value": "1.2% (Property) vs 8.2% (MSA)",
+  "status": "YELLOW",
+  "reasoning": "Subject property shows exceptional 98.8% occupancy per current rent roll, but MSA-wide vacancy of 8.2% signals oversupply risk. Property may be losing pricing power despite strong current performance. Mark YELLOW for market headwinds.",
+  "source": "User-uploaded: RentRoll_Dec2024.xlsx vs CoStar MSA Report Q4 2024",
+  "override_applied": true,
+  "override_document": "RentRoll_Dec2024.xlsx"
+}
+
+SCENARIO C: No Override Available
+----------------------------------
+MARKET DATA: "Violent crime: 4.2 per 1000, Property crime: 22.1 per 1000 (FBI UCR 2024)"
+USER DOC: None uploaded
+CRITERION: sub_1 (Crime Rate)
+
+LOGIC:
+- No user-provided override
+- Use market data from research
+
+OUTPUT:
+{
+  "id": "sub_1",
+  "metric": "Crime Rate",
+  "threshold": "< MSA Average",
+  "value": "Violent: 4.2, Property: 22.1 per 1000",
+  "status": "RED",
+  "reasoning": "Violent crime rate of 4.2 is 31% above MSA average of 3.2. Property crime of 22.1 is 15% above MSA average of 19.2. Both categories exceed acceptable thresholds.",
+  "source": "FBI Uniform Crime Report 2024, Census Tract 48453001234",
+  "override_applied": false
+}
+
+STEP 5: N8N IMPLEMENTATION
+---------------------------
+In the n8n workflow:
+
+NODE: "Parse User Context Docs"
+- Input: Uploaded PDF/Excel files (base64)
+- Tool: PDF.co Text Extraction API OR Python PDF parser
+- Output: {{context_doc_1_text}}, {{context_doc_2_text}}, etc.
+
+NODE: "Gemini Logic Engine"
+- Input:
+  - {{secret_sauce_criteria}} (Immutable Laws)
+  - {{perplexity_research_data}} (Market data)
+  - {{context_doc_1_text}} (User uploads)
+- System Prompt: (Include Override Logic instructions)
+- Output: 30-point JSON array with override fields
+
+STEP 6: VALIDATION TESTS
+-------------------------
+Test Case: "Context Override - Tax Abatement"
+- Input: Houston property + uploaded "Tax_Abatement.pdf" showing 0.5% rate
+- Expected: sub_12 status = GREEN, override_applied = true
+- Validation: Check that county rate (2.3%) was NOT used
+
+Test Case: "No Override - Use Market Data"
+- Input: Phoenix property + no tax docs uploaded
+- Expected: sub_12 uses county rate, override_applied = false
+
+STEP 7: UI/UX CONSIDERATIONS
+-----------------------------
+In the final PDF output:
+- HIGHLIGHT metrics where override_applied = true
+- Include footnote: "* Based on property-specific document: [filename]"
+- Visual indicator: Green checkmark or "📄 Override" icon
+
+CRITICAL REMINDERS:
+- Override logic prevents FALSE NEGATIVES (incorrectly rejecting good deals)
+- User docs are FACTS, not opinions - treat as ground truth
+- Always cite the specific doc and section
+- If user doc is unclear/ambiguous, fall back to market data + note in reasoning

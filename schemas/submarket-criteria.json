@@ -1,0 +1,160 @@
+{
+  "submarket_criteria": [
+    {
+      "id": "sub_1",
+      "metric": "Crime Rate",
+      "category": "Safety",
+      "threshold": "Violent + Property crime <MSA average",
+      "description": "Lower crime than metro average ensures tenant safety",
+      "data_sources": ["FBI UCR", "NeighborhoodScout", "Local Police Reports"],
+      "goldilocks_logic": false,
+      "radius": "1 mile"
+    },
+    {
+      "id": "sub_2",
+      "metric": "School Ratings",
+      "category": "Education",
+      "threshold": ">State average (GreatSchools >5/10)",
+      "description": "Quality schools attract families and support property values",
+      "data_sources": ["GreatSchools.org", "State Education Rankings"],
+      "goldilocks_logic": false,
+      "radius": "3 miles"
+    },
+    {
+      "id": "sub_3",
+      "metric": "Goldilocks Amenities",
+      "category": "Lifestyle",
+      "threshold": "1-2 miles to grocery, retail, dining",
+      "description": "Walkable/bikeable but not surrounded by commercial noise",
+      "data_sources": ["Google Maps", "OpenStreetMap", "Walkability Scores"],
+      "goldilocks_logic": true,
+      "goldilocks_range": {
+        "green_min_miles": 1,
+        "green_max_miles": 2,
+        "yellow_min_miles": 0.5,
+        "yellow_max_miles": 3,
+        "red_condition": "<0.25 miles OR >3 miles"
+      },
+      "radius": "2 miles"
+    },
+    {
+      "id": "sub_4",
+      "metric": "Proximity to Quality Schools",
+      "category": "Education",
+      "threshold": "Rated school <2 miles",
+      "description": "Direct access to education for tenant families",
+      "data_sources": ["GreatSchools.org", "School District Maps"],
+      "goldilocks_logic": false,
+      "radius": "2 miles"
+    },
+    {
+      "id": "sub_5",
+      "metric": "Transport Access (Positive)",
+      "category": "Connectivity",
+      "threshold": "Highway/Transit hub 1-2 miles",
+      "description": "Easy commute access without highway noise/pollution",
+      "data_sources": ["Transit Authority Maps", "Highway Maps"],
+      "goldilocks_logic": true,
+      "goldilocks_range": {
+        "green_min_miles": 1,
+        "green_max_miles": 2,
+        "yellow_min_miles": 0.5,
+        "yellow_max_miles": 3,
+        "red_condition": "<0.5 miles (noise) OR >3 miles (inconvenient)"
+      },
+      "radius": "2 miles"
+    },
+    {
+      "id": "sub_6",
+      "metric": "Transport Negative (Avoidance)",
+      "category": "Risk Assessment",
+      "threshold": "NOT immediately adjacent to highway/airport/rail yard",
+      "description": "Avoid noise and air quality issues",
+      "data_sources": ["Noise Maps", "FAA Airport Data", "Rail Corridor Maps"],
+      "goldilocks_logic": false,
+      "radius": "0.5 miles"
+    },
+    {
+      "id": "sub_7",
+      "metric": "Path of Growth",
+      "category": "Appreciation",
+      "threshold": "On development corridor OR gentrifying neighborhood",
+      "description": "Future value creation from area improvement",
+      "data_sources": ["City Development Plans", "New Construction Activity"],
+      "goldilocks_logic": false,
+      "radius": "3 miles"
+    },
+    {
+      "id": "sub_8",
+      "metric": "Zoning Protections",
+      "category": "Legal/Regulatory",
+      "threshold": "Residential-only OR MF-designated zoning",
+      "description": "Prevents industrial encroachment that degrades property",
+      "data_sources": ["City Zoning Maps", "Planning Department"],
+      "goldilocks_logic": false,
+      "radius": "1 mile"
+    },
+    {
+      "id": "sub_9",
+      "metric": "Renter Density",
+      "category": "Demographics",
+      "threshold": ">50% renters in census tract",
+      "description": "Strong renter culture = less stigma, better tenant pool",
+      "data_sources": ["Census ACS Housing Tenure"],
+      "goldilocks_logic": false,
+      "context_aware": true,
+      "context_rule": "Urban Core: >70% renters = GREEN. Suburban: 50-60% = GREEN, >70% = YELLOW (economic distress signal)",
+      "radius": "1 mile"
+    },
+    {
+      "id": "sub_10",
+      "metric": "Proximity to MF Assets",
+      "category": "Competition/Validation",
+      "threshold": "3+ comparable MF properties <1 mile",
+      "description": "Clustering validates submarket viability",
+      "data_sources": ["CoStar", "Apartment List", "Property Records"],
+      "goldilocks_logic": false,
+      "radius": "1 mile"
+    },
+    {
+      "id": "sub_11",
+      "metric": "Cluster Growth Potential",
+      "category": "Appreciation",
+      "threshold": "Land parcels available for additional MF development",
+      "description": "Room to grow cluster = future exit liquidity",
+      "data_sources": ["Zoning Maps", "Vacant Land Records"],
+      "goldilocks_logic": false,
+      "radius": "2 miles"
+    },
+    {
+      "id": "sub_12",
+      "metric": "Taxes and Fees",
+      "category": "Operating Costs",
+      "threshold": "<2% of property value annually",
+      "description": "Low tax burden improves cash flow",
+      "data_sources": ["County Tax Assessor", "User-Uploaded Tax Abatement Agreements"],
+      "goldilocks_logic": false,
+      "override_priority": "HIGH",
+      "override_rule": "User-uploaded tax abatement/Chapter 353 agreements take precedence over county rates"
+    },
+    {
+      "id": "sub_13",
+      "metric": "Historical Appreciation",
+      "category": "Returns",
+      "threshold": ">3% annually (5-year trailing)",
+      "description": "Property values rising faster than inflation",
+      "data_sources": ["Zillow Home Value Index", "CoStar"],
+      "goldilocks_logic": false,
+      "radius": "1 mile"
+    },
+    {
+      "id": "sub_14",
+      "metric": "Government Volatility",
+      "category": "Risk Assessment",
+      "threshold": "Stable city council, no radical policy shifts",
+      "description": "Predictable regulatory environment",
+      "data_sources": ["Municipal Election Records", "Policy Change History"],
+      "goldilocks_logic": false
+    }
+  ]
+}

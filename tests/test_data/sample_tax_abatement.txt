@@ -1,0 +1,53 @@
+CHAPTER 353 TAX ABATEMENT AGREEMENT
+=====================================
+
+Property: Sunset Apartments
+Address: 456 Oak Avenue, Houston, TX 77002
+Tax Parcel ID: 123-456-789-0001
+
+AGREEMENT TERMS:
+
+Section 1: Tax Exemption Schedule
+----------------------------------
+The City of Houston hereby grants the following property tax abatement:
+
+Years 1-10:  100% exemption from ad valorem property taxes
+Years 11-20: 50% exemption from ad valorem property taxes
+Years 21-25: 25% exemption from ad valorem property taxes
+Years 26+:   Standard county tax rate applies
+
+Section 2: Base Tax Rate
+-------------------------
+Harris County Standard Rate: 2.3% of assessed value
+City of Houston Rate: 0.6% of assessed value
+Combined Standard Rate: 2.9% of assessed value
+
+Section 3: Effective Tax Rates with Abatement
+----------------------------------------------
+Years 1-10:  0.0% (100% abatement)
+Years 11-20: 1.45% (50% of 2.9%)
+Years 21-25: 2.175% (75% of 2.9%)
+Years 26+:   2.9% (full rate)
+
+Section 4: Conditions
+---------------------
+4.1 Property must maintain minimum 90% occupancy
+4.2 At least 20% of units designated as workforce housing
+4.3 Annual compliance reporting required
+4.4 Breach of conditions results in abatement termination
+
+Section 5: Financial Impact
+----------------------------
+Estimated annual tax savings (based on $10M assessed value):
+- Years 1-10: $290,000/year saved
+- Years 11-20: $145,000/year saved
+- Years 21-25: $72,500/year saved
+
+Total 25-year savings: $4,475,000
+
+Executed: January 15, 2023
+Effective Date: January 1, 2023
+Expiration: December 31, 2047
+
+City of Houston Economic Development Department
+Authorized Signature: [Signed]

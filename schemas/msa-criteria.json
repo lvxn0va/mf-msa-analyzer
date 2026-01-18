@@ -1,0 +1,154 @@
+{
+  "msa_criteria": [
+    {
+      "id": "msa_1",
+      "metric": "Population Size",
+      "category": "Demographics",
+      "threshold": ">400,000",
+      "description": "MSA must have sufficient population to support multifamily demand",
+      "data_sources": ["US Census Bureau", "Metro Area Statistics"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_2",
+      "metric": "Population Growth",
+      "category": "Demographics",
+      "threshold": ">1% annual",
+      "description": "Positive population growth indicates demand expansion",
+      "data_sources": ["US Census Bureau", "City Data"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_3",
+      "metric": "Employment Growth",
+      "category": "Economics",
+      "threshold": ">1% annual",
+      "description": "Job growth drives rental demand",
+      "data_sources": ["Bureau of Labor Statistics", "Local Economic Development"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_4",
+      "metric": "Income Growth",
+      "category": "Economics",
+      "threshold": ">2% annual",
+      "description": "Rising incomes support rent growth",
+      "data_sources": ["Bureau of Economic Analysis", "Census ACS"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_5",
+      "metric": "In-Migration",
+      "category": "Demographics",
+      "threshold": "Positive net migration",
+      "description": "People moving TO the market indicates desirability",
+      "data_sources": ["US Census Migration Data", "U-Haul Migration Index"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_6",
+      "metric": "Job Diversity",
+      "category": "Economics",
+      "threshold": "No single industry >25% of employment",
+      "description": "Economic diversity reduces concentration risk",
+      "data_sources": ["Bureau of Labor Statistics", "Industry Employment Data"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_7",
+      "metric": "Environmental Risk",
+      "category": "Risk Assessment",
+      "threshold": "Low flood/fire/hurricane risk",
+      "description": "Climate resilience protects asset value",
+      "data_sources": ["FEMA Flood Maps", "Climate Risk Databases"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_8",
+      "metric": "Unemployment Rate",
+      "category": "Economics",
+      "threshold": "<6%",
+      "description": "Low unemployment indicates economic health",
+      "data_sources": ["Bureau of Labor Statistics"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_9",
+      "metric": "Apartment Vacancy Rate",
+      "category": "Supply/Demand",
+      "threshold": "4-6%",
+      "description": "Balanced vacancy = healthy market (not too tight, not oversupplied)",
+      "data_sources": ["CoStar", "Apartment List", "Local Rental Reports"],
+      "goldilocks_logic": true,
+      "goldilocks_range": {
+        "green_min": 4,
+        "green_max": 6,
+        "yellow_low": 3,
+        "yellow_high": 8
+      }
+    },
+    {
+      "id": "msa_10",
+      "metric": "Cap Rate Spread",
+      "category": "Valuation",
+      "threshold": ">200 bps above 10-year Treasury",
+      "description": "Adequate risk premium over risk-free rate",
+      "data_sources": ["CBRE Cap Rate Survey", "RealPage Analytics"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_11",
+      "metric": "Homeowner Vacancy",
+      "category": "Supply/Demand",
+      "threshold": "<2%",
+      "description": "Low for-sale inventory supports rental demand",
+      "data_sources": ["US Census Housing Vacancy Survey"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_12",
+      "metric": "Multifamily Permits",
+      "category": "Supply/Demand",
+      "threshold": "<2% of existing stock annually",
+      "description": "Controls new supply pipeline to prevent oversaturation",
+      "data_sources": ["US Census Building Permits", "Local Planning Departments"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_13",
+      "metric": "Absorption Rate",
+      "category": "Supply/Demand",
+      "threshold": "<18 months to absorb pipeline",
+      "description": "New units absorbed quickly = strong demand",
+      "data_sources": ["CoStar", "Apartment Research Firms"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_14",
+      "metric": "Landlord-Friendly Laws",
+      "category": "Legal/Regulatory",
+      "threshold": "No rent control, <60 day eviction process",
+      "description": "Legal framework supports property rights",
+      "data_sources": ["State Statutes", "Landlord Legal Guides"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_15",
+      "metric": "Affordability Index",
+      "category": "Economics",
+      "threshold": "Median rent <30% of median household income",
+      "description": "Rents sustainable relative to incomes",
+      "data_sources": ["Census ACS", "HUD Fair Market Rents"],
+      "goldilocks_logic": false
+    },
+    {
+      "id": "msa_16",
+      "metric": "Proximity to Tier 1 MSA",
+      "category": "Location",
+      "threshold": "<200 miles to major metro",
+      "description": "Access to capital, expertise, and exit liquidity",
+      "data_sources": ["Geographic Analysis"],
+      "goldilocks_logic": false
+    }
+  ]
+}

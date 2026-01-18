@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "30-Point Heat Map Schema",
+  "description": "Complete JSON schema for the multifamily investment criteria heat map",
+  "type": "array",
+  "minItems": 30,
+  "maxItems": 30,
+  "items": {
+    "type": "object",
+    "required": ["id", "metric", "threshold", "value", "status", "reasoning", "source"],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^(msa|sub)_[0-9]{1,2}$",
+        "description": "Unique identifier (msa_1 through msa_16, sub_1 through sub_14)"
+      },
+      "metric": {
+        "type": "string",
+        "description": "The specific metric being evaluated"
+      },
+      "threshold": {
+        "type": "string",
+        "description": "The passing criteria threshold from the Immutable Laws"
+      },
+      "value": {
+        "type": "string",
+        "description": "The actual value found during research"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["GREEN", "YELLOW", "RED"],
+        "description": "Traffic light status: GREEN = Pass, YELLOW = Caution, RED = Fail"
+      },
+      "reasoning": {
+        "type": "string",
+        "minLength": 20,
+        "description": "Detailed explanation of why this status was assigned"
+      },
+      "source": {
+        "type": "string",
+        "description": "Citation: Document name + Page/Section or URL"
+      },
+      "override_applied": {
+        "type": "boolean",
+        "description": "True if user-uploaded context document overrode market data"
+      },
+      "override_document": {
+        "type": "string",
+        "description": "Name of the context document that provided override data"
+      }
+    }
+  }
+}
