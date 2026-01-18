@@ -98,7 +98,7 @@ class TestGauntlet:
 
         crime_item = next(item for item in mock_heat_map if item['id'] == 'sub_1')
         assert crime_item['status'] == 'RED', "High crime area must fail crime criterion"
-        assert 'above MSA average' in crime_item['reasoning'].lower() or \
+        assert 'above msa average' in crime_item['reasoning'].lower() or \
                'exceed' in crime_item['reasoning'].lower(), \
                "Reasoning must explain crime exceeds MSA average"
 
