@@ -11,108 +11,152 @@
       "id": "webhook-trigger",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [250, 300],
+      "typeVersion": 2,
+      "position": [-200, 300],
       "webhookId": "analyze-property-webhook"
     },
     {
       "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "MSA_CRITERIA_FILE_ID",
+              "name": "MSA_CRITERIA_FILE_ID",
+              "value": "YOUR_MSA_CRITERIA_GOOGLE_DRIVE_FILE_ID",
+              "type": "string"
+            },
+            {
+              "id": "SUBMARKET_CRITERIA_FILE_ID",
+              "name": "SUBMARKET_CRITERIA_FILE_ID",
+              "value": "YOUR_SUBMARKET_CRITERIA_GOOGLE_DRIVE_FILE_ID",
+              "type": "string"
+            },
+            {
+              "id": "PDF_SERVICE_URL",
+              "name": "PDF_SERVICE_URL",
+              "value": "http://localhost:8000",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [0, 300],
+      "notes": "=== CONFIGURATION ===\nEdit the values above to configure:\n- MSA_CRITERIA_FILE_ID: Google Drive file ID for MSA criteria\n- SUBMARKET_CRITERIA_FILE_ID: Google Drive file ID for Sub-Market criteria\n- PDF_SERVICE_URL: URL to your PDF generation service"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
         "assignments": {
           "assignments": [
             {
               "id": "address",
               "name": "address",
-              "value": "={{ $json.body.address }}",
+              "value": "={{ $('Webhook Trigger').first().json.body.address }}",
               "type": "string"
             },
             {
               "id": "deal_name",
               "name": "deal_name",
-              "value": "={{ $json.body.deal_name }}",
+              "value": "={{ $('Webhook Trigger').first().json.body.deal_name }}",
               "type": "string"
             },
             {
               "id": "context_files",
               "name": "context_files",
-              "value": "={{ $json.body.context_files }}",
+              "value": "={{ $('Webhook Trigger').first().json.body.context_files || [] }}",
               "type": "array"
+            },
+            {
+              "id": "config",
+              "name": "config",
+              "value": "={{ { MSA_CRITERIA_FILE_ID: $json.MSA_CRITERIA_FILE_ID, SUBMARKET_CRITERIA_FILE_ID: $json.SUBMARKET_CRITERIA_FILE_ID, PDF_SERVICE_URL: $json.PDF_SERVICE_URL } }}",
+              "type": "object"
             }
           ]
-        }
+        },
+        "includeOtherFields": false,
+        "options": {}
       },
       "id": "extract-input",
       "name": "Extract Input Data",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [450, 300]
+      "typeVersion": 3.4,
+      "position": [220, 300]
     },
     {
       "parameters": {
-        "authentication": "serviceAccount",
-        "resource": "file",
+        "authentication": "oAuth2",
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "={{ $env.MSA_CRITERIA_FILE_ID }}",
+          "value": "={{ $('Extract Input Data').first().json.config.MSA_CRITERIA_FILE_ID }}",
           "mode": "id"
         },
-        "options": {}
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
       },
       "id": "load-msa-criteria",
-      "name": "Load MSA Criteria PDF",
+      "name": "Load MSA Criteria",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [650, 200],
+      "position": [460, 100],
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "google-drive-credentials",
-          "name": "Google Drive Account"
+          "id": "google-drive-creds",
+          "name": "Google Drive OAuth2"
         }
       }
     },
     {
       "parameters": {
-        "authentication": "serviceAccount",
-        "resource": "file",
+        "authentication": "oAuth2",
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "={{ $env.SUBMARKET_CRITERIA_FILE_ID }}",
+          "value": "={{ $('Extract Input Data').first().json.config.SUBMARKET_CRITERIA_FILE_ID }}",
           "mode": "id"
         },
-        "options": {}
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
       },
       "id": "load-submarket-criteria",
-      "name": "Load Sub-Market Criteria PDF",
+      "name": "Load SubMarket Criteria",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [650, 400],
+      "position": [460, 300],
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "google-drive-credentials",
-          "name": "Google Drive Account"
+          "id": "google-drive-creds",
+          "name": "Google Drive OAuth2"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Parse PDF text from base64 binary data\nconst msaPdfData = $input.first().binary.data;\nconst submarketPdfData = $input.all()[1].binary.data;\n\n// In production, use PDF parsing library\n// For MVP, assume PDFs are pre-converted to text\nconst msaCriteria = Buffer.from(msaPdfData, 'base64').toString('utf-8');\nconst submarketCriteria = Buffer.from(submarketPdfData, 'base64').toString('utf-8');\n\nreturn {\n  msa_criteria_text: msaCriteria,\n  submarket_criteria_text: submarketCriteria,\n  combined_secret_sauce: msaCriteria + \"\\n\\n\" + submarketCriteria\n};"
-      },
-      "id": "parse-criteria-pdfs",
-      "name": "Parse Criteria PDFs",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [850, 300]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse user-uploaded context documents\nconst contextFiles = $('Extract Input Data').item.json.context_files || [];\nconst parsedDocs = [];\n\nfor (let i = 0; i < contextFiles.length; i++) {\n  const file = contextFiles[i];\n  try {\n    // Assume files are base64-encoded PDFs or Excel\n    const fileData = Buffer.from(file.data, 'base64').toString('utf-8');\n    parsedDocs.push({\n      filename: file.name,\n      content: fileData,\n      type: file.type\n    });\n  } catch (error) {\n    console.error(`Failed to parse ${file.name}:`, error);\n  }\n}\n\nreturn {\n  context_documents: parsedDocs,\n  context_count: parsedDocs.length\n};"
+        "jsCode": "// Parse user-uploaded context documents\nconst inputData = $('Extract Input Data').first().json;\nconst contextFiles = inputData.context_files || [];\nconst parsedDocs = [];\n\nfor (const file of contextFiles) {\n  try {\n    if (file.data) {\n      const fileData = Buffer.from(file.data, 'base64').toString('utf-8');\n      parsedDocs.push({\n        filename: file.name || 'unknown',\n        content: fileData,\n        type: file.type || 'unknown'\n      });\n    }\n  } catch (error) {\n    console.error(`Failed to parse ${file.name}:`, error.message);\n  }\n}\n\nreturn {\n  context_documents: parsedDocs,\n  context_text: parsedDocs.map(d => `--- ${d.filename} ---\\n${d.content}`).join('\\n\\n'),\n  context_count: parsedDocs.length\n};"
       },
       "id": "parse-context-docs",
-      "name": "Parse User Context Docs",
+      "name": "Parse Context Docs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [650, 500]
+      "position": [460, 500]
     },
     {
       "parameters": {
@@ -124,129 +168,109 @@
         "headerParameters": {
           "parameters": [
             {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.PERPLEXITY_API_KEY }}"
+              "name": "Content-Type",
+              "value": "application/json"
             }
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "model",
-              "value": "sonar-pro"
-            },
-            {
-              "name": "messages",
-              "value": "={{ [{\"role\": \"system\", \"content\": $node['Load Research Prompt'].json.prompt_text }, {\"role\": \"user\", \"content\": \"Research this property: \" + $('Extract Input Data').item.json.address}] }}"
-            },
-            {
-              "name": "temperature",
-              "value": "0.2"
-            },
-            {
-              "name": "return_citations",
-              "value": "true"
-            }
-          ]
-        },
-        "options": {}
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a real estate research analyst. Gather comprehensive demographic and market data for the specified property address. Include data for 1-mile, 3-mile, and 5-mile radii. For each data point, provide the source URL and date. Return data in JSON format with sections: msa_data (population, employment, income, vacancy, permits) and submarket_data (crime, schools, amenities, transport, growth indicators).\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Research this property address for multifamily investment analysis: {{ $('Extract Input Data').first().json.address }}. Provide comprehensive 1-3-5 mile demographic data with citations.\"\n    }\n  ],\n  \"temperature\": 0.2,\n  \"return_citations\": true\n}",
+        "options": {
+          "timeout": 60000
+        }
       },
       "id": "perplexity-research",
-      "name": "Perplexity Research Agent",
+      "name": "Perplexity Research",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [1050, 200]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "prompt_text",
-              "name": "prompt_text",
-              "value": "={{ $node['Load Research Prompt Template'].json.template.replace('{{address}}', $('Extract Input Data').item.json.address) }}",
-              "type": "string"
-            }
-          ]
-        }
-      },
-      "id": "load-research-prompt",
-      "name": "Load Research Prompt",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [850, 200]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "template",
-              "name": "template",
-              "value": "{{ $loadFile('/prompts/perplexity-research-prompt.txt') }}",
-              "type": "string"
-            }
-          ]
-        }
-      },
-      "id": "load-research-prompt-template",
-      "name": "Load Research Prompt Template",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [650, 100]
-    },
-    {
-      "parameters": {
-        "modelId": {
-          "__rl": true,
-          "value": "gemini-2.0-flash-exp",
-          "mode": "list",
-          "cachedResultName": "Gemini 2.0 Flash"
-        },
-        "prompt": {
-          "messages": [
-            {
-              "role": "system",
-              "content": "={{ $loadFile('/prompts/gemini-system-prompt.txt') }}"
-            },
-            {
-              "role": "user",
-              "content": "=IMMUTABLE LAWS CONTEXT:\n{{ $node['Parse Criteria PDFs'].json.combined_secret_sauce }}\n\nRESEARCH DATA:\n{{ $node['Perplexity Research Agent'].json.choices[0].message.content }}\n\nUSER CONTEXT DOCUMENTS:\n{{ JSON.stringify($node['Parse User Context Docs'].json.context_documents) }}\n\nTASK: Evaluate the property at {{ $('Extract Input Data').item.json.address }} against ALL 30 criteria. Return ONLY the JSON array with exactly 30 objects."
-            }
-          ]
-        },
-        "options": {
-          "temperature": 0.1,
-          "maxTokens": 8000
-        }
-      },
-      "id": "gemini-logic-engine",
-      "name": "Gemini Logic Engine",
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleVertex",
-      "typeVersion": 1,
-      "position": [1250, 300],
+      "typeVersion": 4.2,
+      "position": [700, 100],
       "credentials": {
-        "googleVertexOAuth2Api": {
-          "id": "google-vertex-credentials",
-          "name": "Google Vertex AI Account"
+        "httpHeaderAuth": {
+          "id": "perplexity-auth",
+          "name": "Perplexity API"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Extract and validate the 30-point heat map JSON\nconst geminiResponse = $input.first().json.choices[0].message.content;\n\n// Extract JSON from response (may be wrapped in markdown code blocks)\nlet heatMapJson;\ntry {\n  const jsonMatch = geminiResponse.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    heatMapJson = JSON.parse(geminiResponse);\n  }\n} catch (error) {\n  throw new Error(`Failed to parse Gemini response as JSON: ${error.message}`);\n}\n\n// Validation\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error(`Heat map must contain exactly 30 items, got ${heatMapJson.length}`);\n}\n\n// Validate each item has required fields\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error(`Item ${i} missing required field: ${field}`);\n    }\n  }\n  \n  // Validate status values\n  if (!['GREEN', 'YELLOW', 'RED'].includes(item.status)) {\n    throw new Error(`Item ${i} has invalid status: ${item.status}`);\n  }\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: heatMapJson.filter(i => i.status === 'GREEN').length,\n  yellow_count: heatMapJson.filter(i => i.status === 'YELLOW').length,\n  red_count: heatMapJson.filter(i => i.status === 'RED').length\n};"
+        "mode": "combine",
+        "mergeByFields": {
+          "values": []
+        },
+        "combinationMode": "mergeByPosition",
+        "options": {}
       },
-      "id": "validate-heat-map",
-      "name": "Validate Heat Map JSON",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1450, 300]
+      "id": "merge-criteria",
+      "name": "Merge Criteria",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msa_criteria",
+              "name": "msa_criteria",
+              "value": "={{ $('Load MSA Criteria').first().json.data || $('Load MSA Criteria').first().binary?.data?.toString() || 'MSA Criteria not loaded' }}",
+              "type": "string"
+            },
+            {
+              "id": "submarket_criteria",
+              "name": "submarket_criteria",
+              "value": "={{ $('Load SubMarket Criteria').first().json.data || $('Load SubMarket Criteria').first().binary?.data?.toString() || 'SubMarket Criteria not loaded' }}",
+              "type": "string"
+            },
+            {
+              "id": "research_data",
+              "name": "research_data",
+              "value": "={{ $('Perplexity Research').first().json.choices?.[0]?.message?.content || 'Research data not available' }}",
+              "type": "string"
+            },
+            {
+              "id": "context_docs",
+              "name": "context_docs",
+              "value": "={{ $('Parse Context Docs').first().json.context_text || 'No context documents uploaded' }}",
+              "type": "string"
+            },
+            {
+              "id": "address",
+              "name": "address",
+              "value": "={{ $('Extract Input Data').first().json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "deal_name",
+              "name": "deal_name",
+              "value": "={{ $('Extract Input Data').first().json.deal_name }}",
+              "type": "string"
+            },
+            {
+              "id": "pdf_service_url",
+              "name": "pdf_service_url",
+              "value": "={{ $('Extract Input Data').first().json.config.PDF_SERVICE_URL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "prepare-gemini-input",
+      "name": "Prepare Gemini Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [940, 300]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.PDF_SERVICE_URL }}/generate-pdf",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -257,50 +281,86 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"You are a Senior Investment Committee Member evaluating multifamily real estate. You MUST evaluate ALL 30 criteria and return ONLY a valid JSON array.\\n\\n## IMMUTABLE LAWS (Criteria Definitions):\\n\\n### MSA CRITERIA (16 points):\\n{{ $json.msa_criteria }}\\n\\n### SUB-MARKET CRITERIA (14 points):\\n{{ $json.submarket_criteria }}\\n\\n## RESEARCH DATA:\\n{{ $json.research_data }}\\n\\n## USER CONTEXT DOCUMENTS (Override Priority - These take precedence over market data):\\n{{ $json.context_docs }}\\n\\n## CRITICAL RULES:\\n1. NO HALLUCINATIONS: If a metric violates threshold, mark it RED regardless of how good the deal looks\\n2. CONTEXT OVERRIDE: User-uploaded documents take precedence over market data. Set override_applied=true when using user docs\\n3. GOLDILOCKS LOGIC: For Amenities/Transport - too close (<0.25mi) = RED, 1-2mi = GREEN, >2mi = YELLOW/RED\\n4. VACANCY GOLDILOCKS: <3% = YELLOW (overheated), 4-6% = GREEN, >7% = RED\\n5. OUTPUT: Return ONLY valid JSON array with exactly 30 objects\\n\\n## REQUIRED OUTPUT FORMAT (exactly 30 items):\\n[\\n  {\\n    \\\"id\\\": \\\"msa_1\\\",\\n    \\\"metric\\\": \\\"Population Size\\\",\\n    \\\"threshold\\\": \\\">400,000\\\",\\n    \\\"value\\\": \\\"actual value found\\\",\\n    \\\"status\\\": \\\"GREEN|YELLOW|RED\\\",\\n    \\\"reasoning\\\": \\\"Minimum 20 character explanation\\\",\\n    \\\"source\\\": \\\"Document name, year, section\\\",\\n    \\\"override_applied\\\": false,\\n    \\\"override_document\\\": null\\n  }\\n]\\n\\nIDs must be: msa_1 through msa_16, then sub_1 through sub_14\\n\\nEVALUATE NOW for property: {{ $json.address }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.1,\n    \"maxOutputTokens\": 8192,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "gemini-logic-engine",
+      "name": "Gemini Logic Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, 300],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "gemini-api-key",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\n// Get PDF service URL from earlier node\nconst pdfServiceUrl = $('Prepare Gemini Input').first().json.pdf_service_url;\n\n// Extract content from Gemini response structure\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error(`Failed to extract Gemini response: ${e.message}. Response: ${JSON.stringify(geminiResponse).slice(0, 500)}`);\n}\n\n// Parse JSON from response\nlet heatMapJson;\ntry {\n  // Try direct parse first\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  // Try to extract JSON array from markdown code blocks\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/); \n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error(`Failed to parse JSON: ${e.message}. Content: ${responseText.slice(0, 500)}`);\n  }\n}\n\n// Validation\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error(`Heat map must contain exactly 30 items, got ${heatMapJson.length}`);\n}\n\n// Validate required fields and status values\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  \n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error(`Item ${i} (${item.id || 'unknown'}) missing required field: ${field}`);\n    }\n  }\n  \n  if (!validStatuses.includes(item.status)) {\n    throw new Error(`Item ${i} (${item.id}) has invalid status: ${item.status}. Must be GREEN, YELLOW, or RED`);\n  }\n  \n  if (item.reasoning.length < 20) {\n    console.warn(`Item ${i} (${item.id}) has short reasoning: ${item.reasoning.length} chars`);\n  }\n}\n\n// Calculate summary stats\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\n// Determine recommendation\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name,\n  pdf_service_url: pdfServiceUrl\n};"
+      },
+      "id": "validate-heat-map",
+      "name": "Validate Heat Map",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.pdf_service_url }}/generate-pdf",
+        "sendHeaders": true,
+        "headerParameters": {
           "parameters": [
             {
-              "name": "heat_map",
-              "value": "={{ $node['Validate Heat Map JSON'].json.heat_map }}"
-            },
-            {
-              "name": "deal_name",
-              "value": "={{ $('Extract Input Data').item.json.deal_name }}"
-            },
-            {
-              "name": "address",
-              "value": "={{ $('Extract Input Data').item.json.address }}"
-            },
-            {
-              "name": "research_data",
-              "value": "={{ $node['Perplexity Research Agent'].json }}"
+              "name": "Content-Type",
+              "value": "application/json"
             }
           ]
         },
-        "options": {}
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"heat_map\": {{ JSON.stringify($json.heat_map) }},\n  \"deal_name\": \"{{ $json.deal_name }}\",\n  \"address\": \"{{ $json.address }}\",\n  \"summary\": {\n    \"green_count\": {{ $json.green_count }},\n    \"yellow_count\": {{ $json.yellow_count }},\n    \"red_count\": {{ $json.red_count }},\n    \"recommendation\": \"{{ $json.recommendation }}\"\n  }\n}",
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "generate-pdf",
-      "name": "Generate Investment Brief PDF",
+      "name": "Generate PDF",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [1650, 300]
+      "typeVersion": 4.2,
+      "position": [1660, 300]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ {\n  \"status\": \"success\",\n  \"deal_name\": $('Extract Input Data').item.json.deal_name,\n  \"address\": $('Extract Input Data').item.json.address,\n  \"analysis_summary\": {\n    \"total_criteria\": $node['Validate Heat Map JSON'].json.total_items,\n    \"green_count\": $node['Validate Heat Map JSON'].json.green_count,\n    \"yellow_count\": $node['Validate Heat Map JSON'].json.yellow_count,\n    \"red_count\": $node['Validate Heat Map JSON'].json.red_count,\n    \"recommendation\": $node['Validate Heat Map JSON'].json.red_count > 5 ? 'NO-GO' : ($node['Validate Heat Map JSON'].json.red_count > 2 ? 'CAUTION' : 'PROCEED')\n  },\n  \"heat_map\": $node['Validate Heat Map JSON'].json.heat_map,\n  \"pdf_url\": $node['Generate Investment Brief PDF'].json.pdf_url,\n  \"generated_at\": $now.toISO()\n} }}",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"deal_name\": \"{{ $('Validate Heat Map').first().json.deal_name }}\",\n  \"address\": \"{{ $('Validate Heat Map').first().json.address }}\",\n  \"analysis_summary\": {\n    \"total_criteria\": {{ $('Validate Heat Map').first().json.total_items }},\n    \"green_count\": {{ $('Validate Heat Map').first().json.green_count }},\n    \"yellow_count\": {{ $('Validate Heat Map').first().json.yellow_count }},\n    \"red_count\": {{ $('Validate Heat Map').first().json.red_count }},\n    \"recommendation\": \"{{ $('Validate Heat Map').first().json.recommendation }}\"\n  },\n  \"heat_map\": {{ JSON.stringify($('Validate Heat Map').first().json.heat_map) }},\n  \"pdf_urls\": {\n    \"heat_map\": \"{{ $('Generate PDF').first().json.heat_map_url || '' }}\",\n    \"investment_brief\": \"{{ $('Generate PDF').first().json.investment_brief_url || '' }}\"\n  },\n  \"generated_at\": \"{{ $now.toISO() }}\"\n}",
         "options": {}
       },
       "id": "webhook-response",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [1850, 300]
+      "typeVersion": 1.1,
+      "position": [1900, 300]
     }
   ],
-  "pinData": {},
   "connections": {
     "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
       "main": [
         [
           {
@@ -315,95 +375,84 @@
       "main": [
         [
           {
-            "node": "Load MSA Criteria PDF",
+            "node": "Load MSA Criteria",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Load Sub-Market Criteria PDF",
+            "node": "Load SubMarket Criteria",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Parse User Context Docs",
+            "node": "Parse Context Docs",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Load Research Prompt Template",
+            "node": "Perplexity Research",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Load MSA Criteria PDF": {
+    "Load MSA Criteria": {
       "main": [
         [
           {
-            "node": "Parse Criteria PDFs",
+            "node": "Merge Criteria",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Load Sub-Market Criteria PDF": {
+    "Load SubMarket Criteria": {
       "main": [
         [
           {
-            "node": "Parse Criteria PDFs",
+            "node": "Merge Criteria",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
     },
-    "Parse Criteria PDFs": {
+    "Parse Context Docs": {
       "main": [
         [
           {
-            "node": "Gemini Logic Engine",
+            "node": "Prepare Gemini Input",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse User Context Docs": {
+    "Perplexity Research": {
       "main": [
         [
           {
-            "node": "Gemini Logic Engine",
+            "node": "Prepare Gemini Input",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Load Research Prompt Template": {
+    "Merge Criteria": {
       "main": [
         [
           {
-            "node": "Load Research Prompt",
+            "node": "Prepare Gemini Input",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Load Research Prompt": {
-      "main": [
-        [
-          {
-            "node": "Perplexity Research Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Perplexity Research Agent": {
+    "Prepare Gemini Input": {
       "main": [
         [
           {
@@ -418,25 +467,25 @@
       "main": [
         [
           {
-            "node": "Validate Heat Map JSON",
+            "node": "Validate Heat Map",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate Heat Map JSON": {
+    "Validate Heat Map": {
       "main": [
         [
           {
-            "node": "Generate Investment Brief PDF",
+            "node": "Generate PDF",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Generate Investment Brief PDF": {
+    "Generate PDF": {
       "main": [
         [
           {
@@ -448,14 +497,17 @@
       ]
     }
   },
-  "active": false,
+  "pinData": {},
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "1.0.0",
-  "id": "mf-research-engine-main",
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "versionId": "2.1.0",
   "meta": {
-    "instanceId": "your-n8n-instance-id"
-  },
-  "tags": []
+    "instanceId": "mf-research-engine"
+  }
 }
