@@ -7,16 +7,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "bb9f9c84-fe6b-4d0e-be01-10d4b7dc17b4",
+      "id": "7f72fea5-7a10-4cf1-86a9-1c6bd863e60a",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "onError": "continueRegularOutput",
-      "position": [
-        4096,
-        3072
-      ],
-      "webhookId": "analyze-property-webhook"
+      "position": [8112, 4464],
+      "webhookId": "analyze-property-webhook",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -44,27 +41,21 @@
         },
         "options": {}
       },
-      "id": "39599339-eec5-4691-971d-11747f13e069",
+      "id": "323d4989-a0f9-4d48-b2b5-19b6ef68ab4c",
       "name": "Extract Input Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        4304,
-        3072
-      ]
+      "position": [8320, 4464]
     },
     {
       "parameters": {
         "jsCode": "// Parse user-uploaded context documents\nconst inputData = $('Extract Input Data').first().json;\nconst contextFiles = inputData.context_files || [];\nconst parsedDocs = [];\n\nfor (const file of contextFiles) {\n  try {\n    if (file.data) {\n      const fileData = Buffer.from(file.data, 'base64').toString('utf-8');\n      parsedDocs.push({\n        filename: file.name || 'unknown',\n        content: fileData,\n        type: file.type || 'unknown'\n      });\n    }\n  } catch (error) {\n    console.error(`Failed to parse ${file.name}:`, error.message);\n  }\n}\n\nreturn {\n  context_documents: parsedDocs,\n  context_text: parsedDocs.map(d => `--- ${d.filename} ---\\n${d.content}`).join('\\n\\n'),\n  context_count: parsedDocs.length\n};"
       },
-      "id": "6d2c9c1e-9661-458a-8579-c27bdec045d8",
+      "id": "968d742c-67a5-4f16-85a1-ccc0677784a6",
       "name": "Parse Context Docs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        4544,
-        3168
-      ]
+      "position": [8560, 4560]
     },
     {
       "parameters": {
@@ -88,14 +79,11 @@
           "timeout": 60000
         }
       },
-      "id": "b1acf355-a2b9-4b4a-9797-58df53a891dc",
+      "id": "dd12f8a6-6759-4b93-9097-1c084fa2ca88",
       "name": "Perplexity Research",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        4544,
-        2976
-      ],
+      "position": [8560, 4368],
       "credentials": {
         "httpHeaderAuth": {
           "id": "CqjurZT1ndbJnido",
@@ -108,27 +96,21 @@
         "mode": "append",
         "numberInputs": 2
       },
-      "id": "bdef9418-3ac0-4975-8e58-fe348e84c0d7",
+      "id": "46ec0a94-4e50-4102-826f-0d17d34afb9b",
       "name": "Wait For All Inputs",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [
-        4784,
-        3072
-      ]
+      "position": [8800, 4464]
     },
     {
       "parameters": {
-        "jsCode": "// =============================================================================\n// PREPARE GEMINI INPUT - With Hardcoded Immutable Criteria\n// =============================================================================\n// The 30-point criteria are IMMUTABLE LAWS that never change.\n// Hardcoding them eliminates Google Drive API calls and binary extraction issues.\n// =============================================================================\n\n// -----------------------------------------------------------------------------\n// MSA CRITERIA (16 points) - Macro-level market evaluation\n// -----------------------------------------------------------------------------\nconst MSA_CRITERIA = [\n  {\n    id: \"msa_1\",\n    metric: \"Population Size\",\n    category: \"Demographics\",\n    threshold: \">400,000\",\n    description: \"MSA must have sufficient population to support multifamily demand\",\n    data_sources: [\"US Census Bureau\", \"Metro Area Statistics\"]\n  },\n  {\n    id: \"msa_2\",\n    metric: \"Population Growth\",\n    category: \"Demographics\",\n    threshold: \">1% annual\",\n    description: \"Positive population growth indicates demand expansion\",\n    data_sources: [\"US Census Bureau\", \"City Data\"]\n  },\n  {\n    id: \"msa_3\",\n    metric: \"Employment Growth\",\n    category: \"Economics\",\n    threshold: \">1% annual\",\n    description: \"Job growth drives rental demand\",\n    data_sources: [\"Bureau of Labor Statistics\"]\n  },\n  {\n    id: \"msa_4\",\n    metric: \"Income Growth\",\n    category: \"Economics\",\n    threshold: \">2% annual\",\n    description: \"Rising incomes support rent growth\",\n    data_sources: [\"Bureau of Economic Analysis\", \"Census ACS\"]\n  },\n  {\n    id: \"msa_5\",\n    metric: \"In-Migration\",\n    category: \"Demographics\",\n    threshold: \"Positive net migration\",\n    description: \"People moving TO the market indicates desirability\",\n    data_sources: [\"US Census Migration Data\"]\n  },\n  {\n    id: \"msa_6\",\n    metric: \"Job Diversity\",\n    category: \"Economics\",\n    threshold: \"No single industry >25% of employment\",\n    description: \"Economic diversity reduces concentration risk\",\n    data_sources: [\"Bureau of Labor Statistics\"]\n  },\n  {\n    id: \"msa_7\",\n    metric: \"Environmental Risk\",\n    category: \"Risk Assessment\",\n    threshold: \"Low flood/fire/hurricane risk\",\n    description: \"Climate resilience protects asset value\",\n    data_sources: [\"FEMA Flood Maps\", \"Climate Risk Databases\"]\n  },\n  {\n    id: \"msa_8\",\n    metric: \"Unemployment Rate\",\n    category: \"Economics\",\n    threshold: \"<6%\",\n    description: \"Low unemployment indicates economic health\",\n    data_sources: [\"Bureau of Labor Statistics\"]\n  },\n  {\n    id: \"msa_9\",\n    metric: \"Apartment Vacancy Rate\",\n    category: \"Supply/Demand\",\n    threshold: \"4-6% (GOLDILOCKS: <3% = YELLOW overheated, >7% = RED oversupplied)\",\n    description: \"Balanced vacancy = healthy market\",\n    goldilocks: true,\n    goldilocks_range: { green_min: 4, green_max: 6, yellow_low: 3, yellow_high: 8 }\n  },\n  {\n    id: \"msa_10\",\n    metric: \"Cap Rate Spread\",\n    category: \"Valuation\",\n    threshold: \">200 bps above 10-year Treasury\",\n    description: \"Adequate risk premium over risk-free rate\",\n    data_sources: [\"CBRE Cap Rate Survey\"]\n  },\n  {\n    id: \"msa_11\",\n    metric: \"Homeowner Vacancy\",\n    category: \"Supply/Demand\",\n    threshold: \"<2%\",\n    description: \"Low for-sale inventory supports rental demand\",\n    data_sources: [\"US Census Housing Vacancy Survey\"]\n  },\n  {\n    id: \"msa_12\",\n    metric: \"Multifamily Permits\",\n    category: \"Supply/Demand\",\n    threshold: \"<2% of existing stock annually\",\n    description: \"Controls new supply pipeline\",\n    data_sources: [\"US Census Building Permits\"]\n  },\n  {\n    id: \"msa_13\",\n    metric: \"Absorption Rate\",\n    category: \"Supply/Demand\",\n    threshold: \"<18 months to absorb pipeline\",\n    description: \"New units absorbed quickly = strong demand\",\n    data_sources: [\"CoStar\", \"RealPage\"]\n  },\n  {\n    id: \"msa_14\",\n    metric: \"Landlord-Friendly Laws\",\n    category: \"Legal/Regulatory\",\n    threshold: \"No rent control, <60 day eviction process\",\n    description: \"Legal framework supports property rights\",\n    data_sources: [\"State Statutes\"]\n  },\n  {\n    id: \"msa_15\",\n    metric: \"Affordability Index\",\n    category: \"Economics\",\n    threshold: \"Median rent <30% of median household income\",\n    description: \"Rents sustainable relative to incomes\",\n    data_sources: [\"Census ACS\", \"HUD Fair Market Rents\"]\n  },\n  {\n    id: \"msa_16\",\n    metric: \"Proximity to Tier 1 MSA\",\n    category: \"Location\",\n    threshold: \"<200 miles to major metro OR IS a Tier 1 MSA\",\n    description: \"Access to capital and exit liquidity\",\n    data_sources: [\"Geographic Analysis\"]\n  }\n];\n\n// -----------------------------------------------------------------------------\n// SUB-MARKET CRITERIA (14 points) - Micro-level neighborhood evaluation\n// -----------------------------------------------------------------------------\nconst SUBMARKET_CRITERIA = [\n  {\n    id: \"sub_1\",\n    metric: \"Crime Rate\",\n    category: \"Safety\",\n    threshold: \"Violent + Property crime <MSA average\",\n    description: \"Lower crime ensures tenant safety and property preservation\",\n    data_sources: [\"FBI UCR\", \"NeighborhoodScout\"]\n  },\n  {\n    id: \"sub_2\",\n    metric: \"School Ratings\",\n    category: \"Education\",\n    threshold: \">State average (GreatSchools >5/10)\",\n    description: \"Quality schools attract families\",\n    data_sources: [\"GreatSchools.org\"]\n  },\n  {\n    id: \"sub_3\",\n    metric: \"Goldilocks Amenities\",\n    category: \"Lifestyle\",\n    threshold: \"1-2 miles to grocery/retail (GOLDILOCKS: <0.25mi = RED too close, >3mi = RED too far)\",\n    description: \"Convenient but not surrounded by commercial noise\",\n    goldilocks: true,\n    goldilocks_range: { green_min: 1, green_max: 2, yellow_close: 0.5, yellow_far: 3, red_close: 0.25 }\n  },\n  {\n    id: \"sub_4\",\n    metric: \"Proximity to Quality Schools\",\n    category: \"Education\",\n    threshold: \"Rated school <2 miles\",\n    description: \"Direct access to education\",\n    data_sources: [\"School District Maps\"]\n  },\n  {\n    id: \"sub_5\",\n    metric: \"Transport Access (Positive)\",\n    category: \"Connectivity\",\n    threshold: \"Highway/Transit 1-2 miles (GOLDILOCKS: <0.5mi = RED noise, >3mi = YELLOW inconvenient)\",\n    description: \"Easy commute without highway noise\",\n    goldilocks: true,\n    goldilocks_range: { green_min: 1, green_max: 2, red_close: 0.5, yellow_far: 3 }\n  },\n  {\n    id: \"sub_6\",\n    metric: \"Transport Avoidance (Negative)\",\n    category: \"Risk Assessment\",\n    threshold: \"NOT adjacent to highway/airport/rail yard (<0.5mi = RED)\",\n    description: \"Avoid noise and air quality issues\",\n    data_sources: [\"Noise Maps\", \"FAA Data\"]\n  },\n  {\n    id: \"sub_7\",\n    metric: \"Path of Growth\",\n    category: \"Appreciation\",\n    threshold: \"On development corridor OR gentrifying area\",\n    description: \"Future value creation from area improvement\",\n    data_sources: [\"City Development Plans\"]\n  },\n  {\n    id: \"sub_8\",\n    metric: \"Zoning Protections\",\n    category: \"Legal/Regulatory\",\n    threshold: \"Residential-only OR MF-designated zoning\",\n    description: \"Prevents industrial encroachment\",\n    data_sources: [\"City Zoning Maps\"]\n  },\n  {\n    id: \"sub_9\",\n    metric: \"Renter Density\",\n    category: \"Demographics\",\n    threshold: \">50% renters (Context: Urban >70% OK, Suburban >70% = YELLOW distress signal)\",\n    description: \"Strong renter culture\",\n    context_aware: true,\n    data_sources: [\"Census ACS\"]\n  },\n  {\n    id: \"sub_10\",\n    metric: \"Proximity to MF Assets\",\n    category: \"Competition/Validation\",\n    threshold: \"3+ comparable MF properties <1 mile\",\n    description: \"Clustering validates submarket\",\n    data_sources: [\"CoStar\", \"Apartment List\"]\n  },\n  {\n    id: \"sub_11\",\n    metric: \"Cluster Growth Potential\",\n    category: \"Appreciation\",\n    threshold: \"Land available for additional MF development\",\n    description: \"Room to grow = future exit liquidity\",\n    data_sources: [\"Zoning Maps\", \"Vacant Land Records\"]\n  },\n  {\n    id: \"sub_12\",\n    metric: \"Taxes and Fees\",\n    category: \"Operating Costs\",\n    threshold: \"<2% of property value annually\",\n    description: \"Low tax burden improves cash flow\",\n    override_priority: \"HIGH - User tax abatement docs take precedence\",\n    data_sources: [\"County Tax Assessor\"]\n  },\n  {\n    id: \"sub_13\",\n    metric: \"Historical Appreciation\",\n    category: \"Returns\",\n    threshold: \">3% annually (5-year trailing)\",\n    description: \"Property values rising faster than inflation\",\n    data_sources: [\"Zillow\", \"CoStar\"]\n  },\n  {\n    id: \"sub_14\",\n    metric: \"Government Volatility\",\n    category: \"Risk Assessment\",\n    threshold: \"Stable governance, no radical policy shifts\",\n    description: \"Predictable regulatory environment\",\n    data_sources: [\"Municipal Records\"]\n  }\n];\n\n// -----------------------------------------------------------------------------\n// Extract research data from Perplexity\n// -----------------------------------------------------------------------------\nconst researchNode = $('Perplexity Research').first();\nlet researchData = 'Research data not available';\ntry {\n  const content = researchNode.json?.choices?.[0]?.message?.content;\n  if (content) {\n    researchData = content;\n  }\n} catch (e) {\n  console.error('Failed to extract Perplexity data:', e.message);\n}\n\n// -----------------------------------------------------------------------------\n// Extract context documents\n// -----------------------------------------------------------------------------\nconst contextNode = $('Parse Context Docs').first();\nconst contextDocs = contextNode.json?.context_text || 'No context documents uploaded';\n\n// -----------------------------------------------------------------------------\n// Extract address and deal name\n// -----------------------------------------------------------------------------\nconst inputNode = $('Extract Input Data').first();\nconst address = inputNode.json?.address || 'Address not provided';\nconst dealName = inputNode.json?.deal_name || 'Unnamed Deal';\n\n// -----------------------------------------------------------------------------\n// Format criteria for Gemini prompt\n// -----------------------------------------------------------------------------\nconst formatCriteria = (criteria) => {\n  return criteria.map(c => {\n    let line = `${c.id}: ${c.metric} | Threshold: ${c.threshold}`;\n    if (c.goldilocks) {\n      line += ' [GOLDILOCKS LOGIC APPLIES]';\n    }\n    if (c.context_aware) {\n      line += ' [CONTEXT-AWARE: Urban vs Suburban]';\n    }\n    if (c.override_priority) {\n      line += ` [OVERRIDE: ${c.override_priority}]`;\n    }\n    return line;\n  }).join('\\n');\n};\n\nreturn {\n  msa_criteria: formatCriteria(MSA_CRITERIA),\n  submarket_criteria: formatCriteria(SUBMARKET_CRITERIA),\n  msa_criteria_json: JSON.stringify(MSA_CRITERIA),\n  submarket_criteria_json: JSON.stringify(SUBMARKET_CRITERIA),\n  research_data: researchData,\n  context_docs: contextDocs,\n  address: address,\n  deal_name: dealName\n};"
+        "jsCode": "// =============================================================================\n// PREPARE GEMINI INPUT - With Hardcoded Immutable Criteria\n// =============================================================================\n\nconst MSA_CRITERIA = [\n  { id: \"msa_1\", metric: \"Population Size\", threshold: \">400,000\" },\n  { id: \"msa_2\", metric: \"Population Growth\", threshold: \">1% annual\" },\n  { id: \"msa_3\", metric: \"Employment Growth\", threshold: \">1% annual\" },\n  { id: \"msa_4\", metric: \"Income Growth\", threshold: \">2% annual\" },\n  { id: \"msa_5\", metric: \"In-Migration\", threshold: \"Positive net migration\" },\n  { id: \"msa_6\", metric: \"Job Diversity\", threshold: \"No single industry >25%\" },\n  { id: \"msa_7\", metric: \"Environmental Risk\", threshold: \"Low flood/fire/hurricane risk\" },\n  { id: \"msa_8\", metric: \"Unemployment Rate\", threshold: \"<6%\" },\n  { id: \"msa_9\", metric: \"Apartment Vacancy Rate\", threshold: \"4-6% GOLDILOCKS\", goldilocks: true },\n  { id: \"msa_10\", metric: \"Cap Rate Spread\", threshold: \">200 bps above Treasury\" },\n  { id: \"msa_11\", metric: \"Homeowner Vacancy\", threshold: \"<2%\" },\n  { id: \"msa_12\", metric: \"Multifamily Permits\", threshold: \"<2% of stock annually\" },\n  { id: \"msa_13\", metric: \"Absorption Rate\", threshold: \"<18 months\" },\n  { id: \"msa_14\", metric: \"Landlord-Friendly Laws\", threshold: \"No rent control, <60 day eviction\" },\n  { id: \"msa_15\", metric: \"Affordability Index\", threshold: \"Rent <30% of income\" },\n  { id: \"msa_16\", metric: \"Proximity to Tier 1 MSA\", threshold: \"<200 miles OR is Tier 1\" }\n];\n\nconst SUBMARKET_CRITERIA = [\n  { id: \"sub_1\", metric: \"Crime Rate\", threshold: \"<MSA average\" },\n  { id: \"sub_2\", metric: \"School Ratings\", threshold: \">5/10 GreatSchools\" },\n  { id: \"sub_3\", metric: \"Goldilocks Amenities\", threshold: \"1-2mi to retail GOLDILOCKS\", goldilocks: true },\n  { id: \"sub_4\", metric: \"Proximity to Schools\", threshold: \"<2 miles\" },\n  { id: \"sub_5\", metric: \"Transport Access\", threshold: \"1-2mi GOLDILOCKS\", goldilocks: true },\n  { id: \"sub_6\", metric: \"Transport Avoidance\", threshold: \">0.5mi from highway/airport\" },\n  { id: \"sub_7\", metric: \"Path of Growth\", threshold: \"On development corridor\" },\n  { id: \"sub_8\", metric: \"Zoning Protections\", threshold: \"Residential/MF zoning\" },\n  { id: \"sub_9\", metric: \"Renter Density\", threshold: \">50% renters\", context_aware: true },\n  { id: \"sub_10\", metric: \"Proximity to MF Assets\", threshold: \"3+ comps within 1mi\" },\n  { id: \"sub_11\", metric: \"Cluster Growth Potential\", threshold: \"Land available\" },\n  { id: \"sub_12\", metric: \"Taxes and Fees\", threshold: \"<2% of value annually\" },\n  { id: \"sub_13\", metric: \"Historical Appreciation\", threshold: \">3% annually\" },\n  { id: \"sub_14\", metric: \"Government Volatility\", threshold: \"Stable governance\" }\n];\n\nconst formatCriteria = (criteria) => criteria.map(c => {\n  let line = c.id + \": \" + c.metric + \" | Threshold: \" + c.threshold;\n  if (c.goldilocks) line += \" [GOLDILOCKS]\";\n  if (c.context_aware) line += \" [CONTEXT-AWARE]\";\n  return line;\n}).join(\"\\n\");\n\nconst researchNode = $('Perplexity Research').first();\nlet researchData = \"Research data not available\";\ntry {\n  const content = researchNode.json.choices?.[0]?.message?.content;\n  if (content) researchData = content;\n} catch (e) {\n  console.error(\"Failed to extract Perplexity data:\", e.message);\n}\n\nconst contextNode = $('Parse Context Docs').first();\nconst contextDocs = contextNode.json.context_text || \"No context documents uploaded\";\n\nconst inputNode = $('Extract Input Data').first();\nconst address = inputNode.json.address || \"Address not provided\";\nconst dealName = inputNode.json.deal_name || \"Unnamed Deal\";\n\nreturn {\n  msa_criteria: formatCriteria(MSA_CRITERIA),\n  submarket_criteria: formatCriteria(SUBMARKET_CRITERIA),\n  research_data: researchData,\n  context_docs: contextDocs,\n  address: address,\n  deal_name: dealName\n};"
       },
-      "id": "871bdd09-1b5d-455d-9d63-147c27172768",
+      "id": "fca28aa7-97e0-446b-aefe-c14ce7762663",
       "name": "Prepare Gemini Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        5024,
-        3072
-      ]
+      "position": [9040, 4464]
     },
     {
       "parameters": {
@@ -152,14 +134,11 @@
           "timeout": 120000
         }
       },
-      "id": "9ff7827c-11dd-4937-ada3-e88a7e5262e6",
+      "id": "1563a8c5-9f7c-4440-b313-b152c45f429d",
       "name": "Gemini Logic Engine",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        5264,
-        3072
-      ],
+      "position": [9280, 4464],
       "credentials": {
         "httpQueryAuth": {
           "id": "OQS97WlYAdJfq6YK",
@@ -169,29 +148,23 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\n// Extract content from Gemini response structure\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error(`Failed to extract Gemini response: ${e.message}. Response: ${JSON.stringify(geminiResponse).slice(0, 500)}`);\n}\n\n// Parse JSON from response\nlet heatMapJson;\ntry {\n  // Try direct parse first\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  // Try to extract JSON array from markdown code blocks\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/); \n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error(`Failed to parse JSON: ${e.message}. Content: ${responseText.slice(0, 500)}`);\n  }\n}\n\n// Validation\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error(`Heat map must contain exactly 30 items, got ${heatMapJson.length}`);\n}\n\n// Validate required fields and status values\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  \n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error(`Item ${i} (${item.id || 'unknown'}) missing required field: ${field}`);\n    }\n  }\n  \n  if (!validStatuses.includes(item.status)) {\n    throw new Error(`Item ${i} (${item.id}) has invalid status: ${item.status}. Must be GREEN, YELLOW, or RED`);\n  }\n  \n  if (item.reasoning.length < 20) {\n    console.warn(`Item ${i} (${item.id}) has short reasoning: ${item.reasoning.length} chars`);\n  }\n}\n\n// Calculate summary stats\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\n// Determine recommendation\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name\n};"
+        "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error('Failed to extract Gemini response: ' + e.message);\n}\n\nlet heatMapJson;\ntry {\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error('Failed to parse JSON: ' + e.message);\n  }\n}\n\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error('Heat map must contain exactly 30 items, got ' + heatMapJson.length);\n}\n\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error('Item ' + i + ' missing field: ' + field);\n    }\n  }\n  if (!validStatuses.includes(item.status)) {\n    throw new Error('Item ' + i + ' has invalid status: ' + item.status);\n  }\n}\n\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name\n};"
       },
-      "id": "0034d1e6-f7eb-4c9e-b0aa-ccf4321def80",
+      "id": "180ed7de-5347-4284-9931-295b23164466",
       "name": "Validate Heat Map",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        5504,
-        3072
-      ]
+      "position": [9520, 4464]
     },
     {
       "parameters": {
-        "jsCode": "// Build Heat Map HTML Report for PDF generation\nconst data = $input.first().json;\nconst heatMap = data.heat_map;\nconst dealName = data.deal_name;\nconst address = data.address;\nconst recommendation = data.recommendation;\nconst greenCount = data.green_count;\nconst yellowCount = data.yellow_count;\nconst redCount = data.red_count;\n\n// Status color mapping\nconst statusColors = {\n  'GREEN': '#22c55e',\n  'YELLOW': '#eab308',\n  'RED': '#ef4444'\n};\n\nconst statusBgColors = {\n  'GREEN': '#dcfce7',\n  'YELLOW': '#fef9c3',\n  'RED': '#fee2e2'\n};\n\n// Recommendation styling\nconst recColors = {\n  'PROCEED': { bg: '#dcfce7', text: '#166534', label: '✓ PROCEED' },\n  'CAUTION': { bg: '#fef9c3', text: '#854d0e', label: '⚠ CAUTION' },\n  'NO-GO': { bg: '#fee2e2', text: '#991b1b', label: '✗ NO-GO' }\n};\nconst rec = recColors[recommendation] || recColors['CAUTION'];\n\n// Split criteria\nconst msaCriteria = heatMap.filter(c => c.id.startsWith('msa_'));\nconst subCriteria = heatMap.filter(c => c.id.startsWith('sub_'));\n\n// Build criteria rows\nconst buildRow = (item) => `\n  <tr style=\"border-bottom: 1px solid #e5e7eb;\">\n    <td style=\"padding: 12px 8px; font-weight: 500;\">${item.id}</td>\n    <td style=\"padding: 12px 8px;\">${item.metric}</td>\n    <td style=\"padding: 12px 8px; color: #6b7280;\">${item.threshold}</td>\n    <td style=\"padding: 12px 8px;\">${item.value}</td>\n    <td style=\"padding: 12px 8px;\">\n      <span style=\"display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: ${statusBgColors[item.status]}; color: ${statusColors[item.status]};\">\n        ${item.status}\n      </span>\n    </td>\n    <td style=\"padding: 12px 8px; font-size: 13px; color: #4b5563; max-width: 300px;\">${item.reasoning}</td>\n  </tr>\n`;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    * { margin: 0; padding: 0; box-sizing: border-box; }\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1f2937; line-height: 1.5; padding: 40px; }\n    .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; }\n    .header h1 { font-size: 28px; color: #111827; margin-bottom: 8px; }\n    .header p { color: #6b7280; font-size: 16px; }\n    .summary { display: flex; justify-content: center; gap: 24px; margin: 30px 0; }\n    .summary-card { padding: 20px 30px; border-radius: 12px; text-align: center; }\n    .summary-card .number { font-size: 36px; font-weight: 700; }\n    .summary-card .label { font-size: 14px; color: #6b7280; margin-top: 4px; }\n    .recommendation { text-align: center; margin: 30px 0; padding: 20px; border-radius: 12px; }\n    .recommendation .label { font-size: 24px; font-weight: 700; }\n    .section { margin: 40px 0; }\n    .section h2 { font-size: 20px; color: #374151; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }\n    table { width: 100%; border-collapse: collapse; font-size: 14px; }\n    th { text-align: left; padding: 12px 8px; background: #f9fafb; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }\n    .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px; }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>🏢 ${dealName}</h1>\n    <p>${address}</p>\n    <p style=\"margin-top: 8px; font-size: 12px;\">Generated: ${new Date().toISOString().split('T')[0]}</p>\n  </div>\n\n  <div class=\"summary\">\n    <div class=\"summary-card\" style=\"background: #dcfce7;\">\n      <div class=\"number\" style=\"color: #166534;\">${greenCount}</div>\n      <div class=\"label\">GREEN</div>\n    </div>\n    <div class=\"summary-card\" style=\"background: #fef9c3;\">\n      <div class=\"number\" style=\"color: #854d0e;\">${yellowCount}</div>\n      <div class=\"label\">YELLOW</div>\n    </div>\n    <div class=\"summary-card\" style=\"background: #fee2e2;\">\n      <div class=\"number\" style=\"color: #991b1b;\">${redCount}</div>\n      <div class=\"label\">RED</div>\n    </div>\n  </div>\n\n  <div class=\"recommendation\" style=\"background: ${rec.bg};\">\n    <div class=\"label\" style=\"color: ${rec.text};\">${rec.label}</div>\n    <p style=\"color: ${rec.text}; margin-top: 8px;\">\n      ${recommendation === 'PROCEED' ? 'Proceed to full due diligence' : recommendation === 'CAUTION' ? 'Investment Committee review required' : 'Deal does not meet investment criteria'}\n    </p>\n  </div>\n\n  <div class=\"section\">\n    <h2>📊 MSA Criteria (${msaCriteria.length} points)</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>ID</th>\n          <th>Metric</th>\n          <th>Threshold</th>\n          <th>Value</th>\n          <th>Status</th>\n          <th>Reasoning</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${msaCriteria.map(buildRow).join('')}\n      </tbody>\n    </table>\n  </div>\n\n  <div class=\"section\">\n    <h2>📍 Sub-Market Criteria (${subCriteria.length} points)</h2>\n    <table>\n      <thead>\n        <tr>\n          <th>ID</th>\n          <th>Metric</th>\n          <th>Threshold</th>\n          <th>Value</th>\n          <th>Status</th>\n          <th>Reasoning</th>\n        </tr>\n      </thead>\n      <tbody>\n        ${subCriteria.map(buildRow).join('')}\n      </tbody>\n    </table>\n  </div>\n\n  <div class=\"footer\">\n    <p>AI Multifamily Deep Research Engine | 30-Point Heat Map Analysis</p>\n    <p>This report was generated automatically. Always verify data with primary sources.</p>\n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  html: html,\n  deal_name: dealName,\n  address: address,\n  recommendation: recommendation,\n  heat_map: heatMap,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount\n};"
+        "jsCode": "const data = $input.first().json;\nconst heatMap = data.heat_map;\nconst dealName = data.deal_name;\nconst address = data.address;\nconst recommendation = data.recommendation;\nconst greenCount = data.green_count;\nconst yellowCount = data.yellow_count;\nconst redCount = data.red_count;\n\nconst statusColors = { 'GREEN': '#22c55e', 'YELLOW': '#eab308', 'RED': '#ef4444' };\nconst statusBgColors = { 'GREEN': '#dcfce7', 'YELLOW': '#fef9c3', 'RED': '#fee2e2' };\nconst recColors = {\n  'PROCEED': { bg: '#dcfce7', text: '#166534', label: 'PROCEED' },\n  'CAUTION': { bg: '#fef9c3', text: '#854d0e', label: 'CAUTION' },\n  'NO-GO': { bg: '#fee2e2', text: '#991b1b', label: 'NO-GO' }\n};\nconst rec = recColors[recommendation] || recColors['CAUTION'];\n\nconst msaCriteria = heatMap.filter(c => c.id.startsWith('msa_'));\nconst subCriteria = heatMap.filter(c => c.id.startsWith('sub_'));\n\nconst buildRow = (item) => '<tr style=\"border-bottom: 1px solid #e5e7eb;\"><td style=\"padding: 12px 8px; font-weight: 500;\">' + item.id + '</td><td style=\"padding: 12px 8px;\">' + item.metric + '</td><td style=\"padding: 12px 8px; color: #6b7280;\">' + item.threshold + '</td><td style=\"padding: 12px 8px;\">' + item.value + '</td><td style=\"padding: 12px 8px;\"><span style=\"display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: ' + statusBgColors[item.status] + '; color: ' + statusColors[item.status] + ';\">' + item.status + '</span></td><td style=\"padding: 12px 8px; font-size: 13px; color: #4b5563; max-width: 300px;\">' + item.reasoning + '</td></tr>';\n\nconst html = '<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #1f2937; line-height: 1.5; padding: 40px; } .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; } .header h1 { font-size: 28px; color: #111827; margin-bottom: 8px; } .header p { color: #6b7280; font-size: 16px; } .summary { display: flex; justify-content: center; gap: 24px; margin: 30px 0; } .summary-card { padding: 20px 30px; border-radius: 12px; text-align: center; } .summary-card .number { font-size: 36px; font-weight: 700; } .summary-card .label { font-size: 14px; color: #6b7280; margin-top: 4px; } .recommendation { text-align: center; margin: 30px 0; padding: 20px; border-radius: 12px; } .recommendation .label { font-size: 24px; font-weight: 700; } .section { margin: 40px 0; } .section h2 { font-size: 20px; color: #374151; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; } table { width: 100%; border-collapse: collapse; font-size: 14px; } th { text-align: left; padding: 12px 8px; background: #f9fafb; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; } .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px; }</style></head><body><div class=\"header\"><h1>' + dealName + '</h1><p>' + address + '</p><p style=\"margin-top: 8px; font-size: 12px;\">Generated: ' + new Date().toISOString().split('T')[0] + '</p></div><div class=\"summary\"><div class=\"summary-card\" style=\"background: #dcfce7;\"><div class=\"number\" style=\"color: #166534;\">' + greenCount + '</div><div class=\"label\">GREEN</div></div><div class=\"summary-card\" style=\"background: #fef9c3;\"><div class=\"number\" style=\"color: #854d0e;\">' + yellowCount + '</div><div class=\"label\">YELLOW</div></div><div class=\"summary-card\" style=\"background: #fee2e2;\"><div class=\"number\" style=\"color: #991b1b;\">' + redCount + '</div><div class=\"label\">RED</div></div></div><div class=\"recommendation\" style=\"background: ' + rec.bg + ';\"><div class=\"label\" style=\"color: ' + rec.text + ';\">' + rec.label + '</div></div><div class=\"section\"><h2>MSA Criteria (' + msaCriteria.length + ' points)</h2><table><thead><tr><th>ID</th><th>Metric</th><th>Threshold</th><th>Value</th><th>Status</th><th>Reasoning</th></tr></thead><tbody>' + msaCriteria.map(buildRow).join('') + '</tbody></table></div><div class=\"section\"><h2>Sub-Market Criteria (' + subCriteria.length + ' points)</h2><table><thead><tr><th>ID</th><th>Metric</th><th>Threshold</th><th>Value</th><th>Status</th><th>Reasoning</th></tr></thead><tbody>' + subCriteria.map(buildRow).join('') + '</tbody></table></div><div class=\"footer\"><p>AI Multifamily Deep Research Engine | 30-Point Heat Map Analysis</p></div></body></html>';\n\nreturn {\n  html: html,\n  deal_name: dealName,\n  address: address,\n  recommendation: recommendation,\n  heat_map: heatMap,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount\n};"
       },
-      "id": "c38e992a-a8e0-414a-a382-6259ce620bf7",
+      "id": "39d2970a-906e-48d0-a5ae-cbe8ad015519",
       "name": "Build Heat Map HTML",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        5744,
-        3072
-      ]
+      "position": [9760, 4464]
     },
     {
       "parameters": {
@@ -215,14 +188,11 @@
           "timeout": 60000
         }
       },
-      "id": "3297e96e-1272-4638-b9af-65e989198322",
+      "id": "8968c5f5-5e21-41db-9884-24b31fade9d0",
       "name": "Generate PDF (PDF Noodle)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        5984,
-        3072
-      ],
+      "position": [10000, 4464],
       "credentials": {
         "httpHeaderAuth": {
           "id": "Bxqxa3dsLKy0qd4b",
@@ -236,14 +206,11 @@
         "responseBody": "={\n  \"status\": \"success\",\n  \"deal_name\": \"{{ $('Build Heat Map HTML').first().json.deal_name }}\",\n  \"address\": \"{{ $('Build Heat Map HTML').first().json.address }}\",\n  \"analysis_summary\": {\n    \"total_criteria\": 30,\n    \"green_count\": {{ $('Build Heat Map HTML').first().json.green_count }},\n    \"yellow_count\": {{ $('Build Heat Map HTML').first().json.yellow_count }},\n    \"red_count\": {{ $('Build Heat Map HTML').first().json.red_count }},\n    \"recommendation\": \"{{ $('Build Heat Map HTML').first().json.recommendation }}\"\n  },\n  \"heat_map\": {{ JSON.stringify($('Build Heat Map HTML').first().json.heat_map) }},\n  \"pdf_url\": \"{{ $('Generate PDF (PDF Noodle)').first().json.signedUrl }}\",\n  \"generated_at\": \"{{ $now.toISO() }}\"\n}",
         "options": {}
       },
-      "id": "2c80869a-ccbf-48b2-9afc-3ad2d06a2038",
+      "id": "96587ac2-94cd-4613-8fe1-2a1cbd59fa8c",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [
-        6224,
-        3072
-      ]
+      "position": [10240, 4464]
     }
   ],
   "connections": {
@@ -274,17 +241,6 @@
         ]
       ]
     },
-    "Perplexity Research": {
-      "main": [
-        [
-          {
-            "node": "Wait For All Inputs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Parse Context Docs": {
       "main": [
         [
@@ -292,6 +248,17 @@
             "node": "Wait For All Inputs",
             "type": "main",
             "index": 1
+          }
+        ]
+      ]
+    },
+    "Perplexity Research": {
+      "main": [
+        [
+          {
+            "node": "Wait For All Inputs",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
