@@ -10,7 +10,8 @@
       "id": "bb9f9c84-fe6b-4d0e-be01-10d4b7dc17b4",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
+      "typeVersion": 2.1,
+      "onError": "continueRegularOutput",
       "position": [
         4096,
         3072
@@ -209,7 +210,7 @@
       "id": "bdef9418-3ac0-4975-8e58-fe348e84c0d7",
       "name": "Wait For All Inputs",
       "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
+      "typeVersion": 3.2,
       "position": [
         4992,
         3072
@@ -337,7 +338,7 @@
       "id": "2c80869a-ccbf-48b2-9afc-3ad2d06a2038",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
+      "typeVersion": 1.5,
       "position": [
         6432,
         3072
