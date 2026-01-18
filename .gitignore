@@ -73,3 +73,13 @@ service-account*.json
 tmp/
 temp/
 *.tmp
+
+# Background files
+Background/
+
+# Development tools
+.agent/
+.claude/
+.cursor/
+.mcp.json
+_bmad/
