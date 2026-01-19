@@ -7,11 +7,11 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "7f72fea5-7a10-4cf1-86a9-1c6bd863e60a",
+      "id": "5d68566b-98c6-462a-85c6-ced6702b5787",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [8112, 4464],
+      "position": [10896, 4416],
       "webhookId": "analyze-property-webhook",
       "onError": "continueRegularOutput"
     },
@@ -22,40 +22,40 @@
             {
               "id": "address",
               "name": "address",
-              "value": "={{ $json.address }}",
+              "value": "={{ $json.body.address }}",
               "type": "string"
             },
             {
               "id": "deal_name",
               "name": "deal_name",
-              "value": "={{ $json.deal_name }}",
+              "value": "={{ $json.body.deal_name }}",
               "type": "string"
             },
             {
               "id": "context_files",
               "name": "context_files",
-              "value": "={{ $json.context_files || [] }}",
+              "value": "={{ $json.body.context_files || [] }}",
               "type": "array"
             }
           ]
         },
         "options": {}
       },
-      "id": "323d4989-a0f9-4d48-b2b5-19b6ef68ab4c",
+      "id": "5854e4c6-1f8b-4fab-a4b8-03d7b7960e43",
       "name": "Extract Input Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [8320, 4464]
+      "position": [11104, 4416]
     },
     {
       "parameters": {
         "jsCode": "// Parse user-uploaded context documents\nconst inputData = $('Extract Input Data').first().json;\nconst contextFiles = inputData.context_files || [];\nconst parsedDocs = [];\n\nfor (const file of contextFiles) {\n  try {\n    if (file.data) {\n      const fileData = Buffer.from(file.data, 'base64').toString('utf-8');\n      parsedDocs.push({\n        filename: file.name || 'unknown',\n        content: fileData,\n        type: file.type || 'unknown'\n      });\n    }\n  } catch (error) {\n    console.error(`Failed to parse ${file.name}:`, error.message);\n  }\n}\n\nreturn {\n  context_documents: parsedDocs,\n  context_text: parsedDocs.map(d => `--- ${d.filename} ---\\n${d.content}`).join('\\n\\n'),\n  context_count: parsedDocs.length\n};"
       },
-      "id": "968d742c-67a5-4f16-85a1-ccc0677784a6",
+      "id": "ed330199-25ab-4e5f-b26c-cfea68f56a12",
       "name": "Parse Context Docs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [8560, 4560]
+      "position": [11344, 4512]
     },
     {
       "parameters": {
@@ -79,11 +79,11 @@
           "timeout": 60000
         }
       },
-      "id": "dd12f8a6-6759-4b93-9097-1c084fa2ca88",
+      "id": "47241c21-14b5-49b3-b2ef-7a0ccf53eb90",
       "name": "Perplexity Research",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [8560, 4368],
+      "position": [11344, 4320],
       "credentials": {
         "httpHeaderAuth": {
           "id": "CqjurZT1ndbJnido",
@@ -96,26 +96,26 @@
         "mode": "append",
         "numberInputs": 2
       },
-      "id": "46ec0a94-4e50-4102-826f-0d17d34afb9b",
+      "id": "b3dd4ff4-3044-4e1a-9e28-a6584ea63970",
       "name": "Wait For All Inputs",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [8800, 4464]
+      "position": [11584, 4416]
     },
     {
       "parameters": {
-        "jsCode": "// =============================================================================\n// PREPARE GEMINI INPUT - With Hardcoded Immutable Criteria\n// =============================================================================\n\nconst MSA_CRITERIA = [\n  { id: \"msa_1\", metric: \"Population Size\", threshold: \">400,000\" },\n  { id: \"msa_2\", metric: \"Population Growth\", threshold: \">1% annual\" },\n  { id: \"msa_3\", metric: \"Employment Growth\", threshold: \">1% annual\" },\n  { id: \"msa_4\", metric: \"Income Growth\", threshold: \">2% annual\" },\n  { id: \"msa_5\", metric: \"In-Migration\", threshold: \"Positive net migration\" },\n  { id: \"msa_6\", metric: \"Job Diversity\", threshold: \"No single industry >25%\" },\n  { id: \"msa_7\", metric: \"Environmental Risk\", threshold: \"Low flood/fire/hurricane risk\" },\n  { id: \"msa_8\", metric: \"Unemployment Rate\", threshold: \"<6%\" },\n  { id: \"msa_9\", metric: \"Apartment Vacancy Rate\", threshold: \"4-6% GOLDILOCKS\", goldilocks: true },\n  { id: \"msa_10\", metric: \"Cap Rate Spread\", threshold: \">200 bps above Treasury\" },\n  { id: \"msa_11\", metric: \"Homeowner Vacancy\", threshold: \"<2%\" },\n  { id: \"msa_12\", metric: \"Multifamily Permits\", threshold: \"<2% of stock annually\" },\n  { id: \"msa_13\", metric: \"Absorption Rate\", threshold: \"<18 months\" },\n  { id: \"msa_14\", metric: \"Landlord-Friendly Laws\", threshold: \"No rent control, <60 day eviction\" },\n  { id: \"msa_15\", metric: \"Affordability Index\", threshold: \"Rent <30% of income\" },\n  { id: \"msa_16\", metric: \"Proximity to Tier 1 MSA\", threshold: \"<200 miles OR is Tier 1\" }\n];\n\nconst SUBMARKET_CRITERIA = [\n  { id: \"sub_1\", metric: \"Crime Rate\", threshold: \"<MSA average\" },\n  { id: \"sub_2\", metric: \"School Ratings\", threshold: \">5/10 GreatSchools\" },\n  { id: \"sub_3\", metric: \"Goldilocks Amenities\", threshold: \"1-2mi to retail GOLDILOCKS\", goldilocks: true },\n  { id: \"sub_4\", metric: \"Proximity to Schools\", threshold: \"<2 miles\" },\n  { id: \"sub_5\", metric: \"Transport Access\", threshold: \"1-2mi GOLDILOCKS\", goldilocks: true },\n  { id: \"sub_6\", metric: \"Transport Avoidance\", threshold: \">0.5mi from highway/airport\" },\n  { id: \"sub_7\", metric: \"Path of Growth\", threshold: \"On development corridor\" },\n  { id: \"sub_8\", metric: \"Zoning Protections\", threshold: \"Residential/MF zoning\" },\n  { id: \"sub_9\", metric: \"Renter Density\", threshold: \">50% renters\", context_aware: true },\n  { id: \"sub_10\", metric: \"Proximity to MF Assets\", threshold: \"3+ comps within 1mi\" },\n  { id: \"sub_11\", metric: \"Cluster Growth Potential\", threshold: \"Land available\" },\n  { id: \"sub_12\", metric: \"Taxes and Fees\", threshold: \"<2% of value annually\" },\n  { id: \"sub_13\", metric: \"Historical Appreciation\", threshold: \">3% annually\" },\n  { id: \"sub_14\", metric: \"Government Volatility\", threshold: \"Stable governance\" }\n];\n\nconst formatCriteria = (criteria) => criteria.map(c => {\n  let line = c.id + \": \" + c.metric + \" | Threshold: \" + c.threshold;\n  if (c.goldilocks) line += \" [GOLDILOCKS]\";\n  if (c.context_aware) line += \" [CONTEXT-AWARE]\";\n  return line;\n}).join(\"\\n\");\n\nconst researchNode = $('Perplexity Research').first();\nlet researchData = \"Research data not available\";\ntry {\n  const content = researchNode.json.choices?.[0]?.message?.content;\n  if (content) researchData = content;\n} catch (e) {\n  console.error(\"Failed to extract Perplexity data:\", e.message);\n}\n\nconst contextNode = $('Parse Context Docs').first();\nconst contextDocs = contextNode.json.context_text || \"No context documents uploaded\";\n\nconst inputNode = $('Extract Input Data').first();\nconst address = inputNode.json.address || \"Address not provided\";\nconst dealName = inputNode.json.deal_name || \"Unnamed Deal\";\n\nreturn {\n  msa_criteria: formatCriteria(MSA_CRITERIA),\n  submarket_criteria: formatCriteria(SUBMARKET_CRITERIA),\n  research_data: researchData,\n  context_docs: contextDocs,\n  address: address,\n  deal_name: dealName\n};"
+        "jsCode": "// =============================================================================\n// PREPARE GEMINI INPUT - With Hardcoded Immutable Criteria\n// Builds properly escaped JSON body for Gemini API\n// =============================================================================\n\nconst MSA_CRITERIA = [\n  { id: \"msa_1\", metric: \"Population Size\", threshold: \">400,000\" },\n  { id: \"msa_2\", metric: \"Population Growth\", threshold: \">1% annual\" },\n  { id: \"msa_3\", metric: \"Employment Growth\", threshold: \">1% annual\" },\n  { id: \"msa_4\", metric: \"Income Growth\", threshold: \">2% annual\" },\n  { id: \"msa_5\", metric: \"In-Migration\", threshold: \"Positive net migration\" },\n  { id: \"msa_6\", metric: \"Job Diversity\", threshold: \"No single industry >25%\" },\n  { id: \"msa_7\", metric: \"Environmental Risk\", threshold: \"Low flood/fire/hurricane risk\" },\n  { id: \"msa_8\", metric: \"Unemployment Rate\", threshold: \"<6%\" },\n  { id: \"msa_9\", metric: \"Apartment Vacancy Rate\", threshold: \"4-6% GOLDILOCKS\", goldilocks: true },\n  { id: \"msa_10\", metric: \"Cap Rate Spread\", threshold: \">200 bps above Treasury\" },\n  { id: \"msa_11\", metric: \"Homeowner Vacancy\", threshold: \"<2%\" },\n  { id: \"msa_12\", metric: \"Multifamily Permits\", threshold: \"<2% of stock annually\" },\n  { id: \"msa_13\", metric: \"Absorption Rate\", threshold: \"<18 months\" },\n  { id: \"msa_14\", metric: \"Landlord-Friendly Laws\", threshold: \"No rent control, <60 day eviction\" },\n  { id: \"msa_15\", metric: \"Affordability Index\", threshold: \"Rent <30% of income\" },\n  { id: \"msa_16\", metric: \"Proximity to Tier 1 MSA\", threshold: \"<200 miles OR is Tier 1\" }\n];\n\nconst SUBMARKET_CRITERIA = [\n  { id: \"sub_1\", metric: \"Crime Rate\", threshold: \"<MSA average\" },\n  { id: \"sub_2\", metric: \"School Ratings\", threshold: \">5/10 GreatSchools\" },\n  { id: \"sub_3\", metric: \"Goldilocks Amenities\", threshold: \"1-2mi to retail GOLDILOCKS\", goldilocks: true },\n  { id: \"sub_4\", metric: \"Proximity to Schools\", threshold: \"<2 miles\" },\n  { id: \"sub_5\", metric: \"Transport Access\", threshold: \"1-2mi GOLDILOCKS\", goldilocks: true },\n  { id: \"sub_6\", metric: \"Transport Avoidance\", threshold: \">0.5mi from highway/airport\" },\n  { id: \"sub_7\", metric: \"Path of Growth\", threshold: \"On development corridor\" },\n  { id: \"sub_8\", metric: \"Zoning Protections\", threshold: \"Residential/MF zoning\" },\n  { id: \"sub_9\", metric: \"Renter Density\", threshold: \">50% renters\", context_aware: true },\n  { id: \"sub_10\", metric: \"Proximity to MF Assets\", threshold: \"3+ comps within 1mi\" },\n  { id: \"sub_11\", metric: \"Cluster Growth Potential\", threshold: \"Land available\" },\n  { id: \"sub_12\", metric: \"Taxes and Fees\", threshold: \"<2% of value annually\" },\n  { id: \"sub_13\", metric: \"Historical Appreciation\", threshold: \">3% annually\" },\n  { id: \"sub_14\", metric: \"Government Volatility\", threshold: \"Stable governance\" }\n];\n\nconst formatCriteria = (criteria) => criteria.map(c => c.id + \": \" + c.metric + \" | \" + c.threshold).join(\"; \");\n\nconst researchNode = $('Perplexity Research').first();\nlet researchData = \"Research data not available\";\ntry {\n  const content = researchNode.json.choices?.[0]?.message?.content;\n  if (content) researchData = content;\n} catch (e) {}\n\nconst contextNode = $('Parse Context Docs').first();\nconst contextDocs = contextNode.json.context_text || \"None\";\n\nconst inputNode = $('Extract Input Data').first();\nconst address = inputNode.json.address || \"Address not provided\";\nconst dealName = inputNode.json.deal_name || \"Unnamed Deal\";\n\nconst promptText = `Evaluate this property for multifamily investment. Return ONLY a JSON array with exactly 30 objects.\n\nADDRESS: ${address}\n\nCRITERIA (evaluate all 30):\nMSA: ${formatCriteria(MSA_CRITERIA)}\nSUB: ${formatCriteria(SUBMARKET_CRITERIA)}\n\nRESEARCH: ${researchData}\n\nCONTEXT DOCS: ${contextDocs}\n\nRULES:\n1. Status must be GREEN, YELLOW, or RED only\n2. Reasoning must be 20-50 chars (concise)\n3. GOLDILOCKS: vacancy 4-6%=GREEN, <3%=YELLOW, >7%=RED; amenities 1-2mi=GREEN\n4. Return valid JSON array, no markdown\n\nFORMAT: [{\"id\":\"msa_1\",\"metric\":\"Population Size\",\"threshold\":\">400,000\",\"value\":\"2.3M\",\"status\":\"GREEN\",\"reasoning\":\"Austin MSA exceeds threshold\",\"source\":\"Census\",\"override_applied\":false,\"override_document\":null},...]\n\nOutput exactly 30 items: msa_1-msa_16, sub_1-sub_14`;\n\nconst geminiRequestBody = {\n  contents: [{role: \"user\", parts: [{text: promptText}]}],\n  generationConfig: {temperature: 0.1, maxOutputTokens: 32768, responseMimeType: \"application/json\"}\n};\n\nreturn {\n  gemini_request_body: geminiRequestBody,\n  address: address,\n  deal_name: dealName\n};"
       },
-      "id": "fca28aa7-97e0-446b-aefe-c14ce7762663",
+      "id": "66434670-882a-46a1-b47f-0a259965b4c3",
       "name": "Prepare Gemini Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [9040, 4464]
+      "position": [11824, 4416]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpQueryAuth",
         "sendHeaders": true,
@@ -129,16 +129,16 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"You are a Senior Investment Committee Member evaluating multifamily real estate. Evaluate ALL 30 criteria and return ONLY a valid JSON array.\\n\\n## MSA CRITERIA (16 points):\\n{{ $json.msa_criteria }}\\n\\n## SUB-MARKET CRITERIA (14 points):\\n{{ $json.submarket_criteria }}\\n\\n## RESEARCH DATA:\\n{{ $json.research_data }}\\n\\n## USER CONTEXT DOCUMENTS (Override Priority):\\n{{ $json.context_docs }}\\n\\n## RULES:\\n1. If data violates threshold, mark RED regardless of deal quality\\n2. User documents override market data - set override_applied=true\\n3. GOLDILOCKS: For Amenities/Transport, too close (<0.25mi) = RED, 1-2mi = GREEN, >3mi = YELLOW/RED\\n4. VACANCY GOLDILOCKS: <3% = YELLOW (overheated), 4-6% = GREEN, >7% = RED\\n5. Return ONLY valid JSON array with exactly 30 objects\\n\\n## OUTPUT FORMAT (30 items):\\n[\\n  {\\n    \\\"id\\\": \\\"msa_1\\\",\\n    \\\"metric\\\": \\\"Population Size\\\",\\n    \\\"threshold\\\": \\\">400,000\\\",\\n    \\\"value\\\": \\\"actual value\\\",\\n    \\\"status\\\": \\\"GREEN|YELLOW|RED\\\",\\n    \\\"reasoning\\\": \\\"20+ char explanation\\\",\\n    \\\"source\\\": \\\"data source\\\",\\n    \\\"override_applied\\\": false,\\n    \\\"override_document\\\": null\\n  }\\n]\\n\\nIDs: msa_1-msa_16, then sub_1-sub_14\\n\\nEVALUATE: {{ $json.address }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.1,\n    \"maxOutputTokens\": 8192,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "jsonBody": "={{ JSON.stringify($json.gemini_request_body) }}",
         "options": {
           "timeout": 120000
         }
       },
-      "id": "1563a8c5-9f7c-4440-b313-b152c45f429d",
+      "id": "05c0c177-16fc-4e97-b26b-74d2e1b46a20",
       "name": "Gemini Logic Engine",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [9280, 4464],
+      "position": [12064, 4416],
       "credentials": {
         "httpQueryAuth": {
           "id": "OQS97WlYAdJfq6YK",
@@ -150,21 +150,21 @@
       "parameters": {
         "jsCode": "// Extract and validate the 30-point heat map JSON from Gemini response\nconst geminiResponse = $input.first().json;\n\nlet responseText;\ntry {\n  responseText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\n  if (!responseText) {\n    throw new Error('No text content in Gemini response');\n  }\n} catch (e) {\n  throw new Error('Failed to extract Gemini response: ' + e.message);\n}\n\nlet heatMapJson;\ntry {\n  heatMapJson = JSON.parse(responseText);\n} catch (e) {\n  const jsonMatch = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    heatMapJson = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error('Failed to parse JSON: ' + e.message);\n  }\n}\n\nif (!Array.isArray(heatMapJson)) {\n  throw new Error('Heat map must be an array');\n}\n\nif (heatMapJson.length !== 30) {\n  throw new Error('Heat map must contain exactly 30 items, got ' + heatMapJson.length);\n}\n\nconst requiredFields = ['id', 'metric', 'threshold', 'value', 'status', 'reasoning', 'source'];\nconst validStatuses = ['GREEN', 'YELLOW', 'RED'];\n\nfor (let i = 0; i < heatMapJson.length; i++) {\n  const item = heatMapJson[i];\n  for (const field of requiredFields) {\n    if (!(field in item)) {\n      throw new Error('Item ' + i + ' missing field: ' + field);\n    }\n  }\n  if (!validStatuses.includes(item.status)) {\n    throw new Error('Item ' + i + ' has invalid status: ' + item.status);\n  }\n}\n\nconst greenCount = heatMapJson.filter(i => i.status === 'GREEN').length;\nconst yellowCount = heatMapJson.filter(i => i.status === 'YELLOW').length;\nconst redCount = heatMapJson.filter(i => i.status === 'RED').length;\n\nlet recommendation;\nif (redCount > 5) {\n  recommendation = 'NO-GO';\n} else if (redCount >= 3) {\n  recommendation = 'CAUTION';\n} else {\n  recommendation = 'PROCEED';\n}\n\nreturn {\n  heat_map: heatMapJson,\n  validation_passed: true,\n  total_items: heatMapJson.length,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount,\n  recommendation: recommendation,\n  address: $('Extract Input Data').first().json.address,\n  deal_name: $('Extract Input Data').first().json.deal_name\n};"
       },
-      "id": "180ed7de-5347-4284-9931-295b23164466",
+      "id": "039f69f4-b1df-4cee-b3e9-20309ce5bcd5",
       "name": "Validate Heat Map",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [9520, 4464]
+      "position": [12304, 4416]
     },
     {
       "parameters": {
         "jsCode": "const data = $input.first().json;\nconst heatMap = data.heat_map;\nconst dealName = data.deal_name;\nconst address = data.address;\nconst recommendation = data.recommendation;\nconst greenCount = data.green_count;\nconst yellowCount = data.yellow_count;\nconst redCount = data.red_count;\n\nconst statusColors = { 'GREEN': '#22c55e', 'YELLOW': '#eab308', 'RED': '#ef4444' };\nconst statusBgColors = { 'GREEN': '#dcfce7', 'YELLOW': '#fef9c3', 'RED': '#fee2e2' };\nconst recColors = {\n  'PROCEED': { bg: '#dcfce7', text: '#166534', label: 'PROCEED' },\n  'CAUTION': { bg: '#fef9c3', text: '#854d0e', label: 'CAUTION' },\n  'NO-GO': { bg: '#fee2e2', text: '#991b1b', label: 'NO-GO' }\n};\nconst rec = recColors[recommendation] || recColors['CAUTION'];\n\nconst msaCriteria = heatMap.filter(c => c.id.startsWith('msa_'));\nconst subCriteria = heatMap.filter(c => c.id.startsWith('sub_'));\n\nconst buildRow = (item) => '<tr style=\"border-bottom: 1px solid #e5e7eb;\"><td style=\"padding: 12px 8px; font-weight: 500;\">' + item.id + '</td><td style=\"padding: 12px 8px;\">' + item.metric + '</td><td style=\"padding: 12px 8px; color: #6b7280;\">' + item.threshold + '</td><td style=\"padding: 12px 8px;\">' + item.value + '</td><td style=\"padding: 12px 8px;\"><span style=\"display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: ' + statusBgColors[item.status] + '; color: ' + statusColors[item.status] + ';\">' + item.status + '</span></td><td style=\"padding: 12px 8px; font-size: 13px; color: #4b5563; max-width: 300px;\">' + item.reasoning + '</td></tr>';\n\nconst html = '<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #1f2937; line-height: 1.5; padding: 40px; } .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #e5e7eb; } .header h1 { font-size: 28px; color: #111827; margin-bottom: 8px; } .header p { color: #6b7280; font-size: 16px; } .summary { display: flex; justify-content: center; gap: 24px; margin: 30px 0; } .summary-card { padding: 20px 30px; border-radius: 12px; text-align: center; } .summary-card .number { font-size: 36px; font-weight: 700; } .summary-card .label { font-size: 14px; color: #6b7280; margin-top: 4px; } .recommendation { text-align: center; margin: 30px 0; padding: 20px; border-radius: 12px; } .recommendation .label { font-size: 24px; font-weight: 700; } .section { margin: 40px 0; } .section h2 { font-size: 20px; color: #374151; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; } table { width: 100%; border-collapse: collapse; font-size: 14px; } th { text-align: left; padding: 12px 8px; background: #f9fafb; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; } .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 12px; }</style></head><body><div class=\"header\"><h1>' + dealName + '</h1><p>' + address + '</p><p style=\"margin-top: 8px; font-size: 12px;\">Generated: ' + new Date().toISOString().split('T')[0] + '</p></div><div class=\"summary\"><div class=\"summary-card\" style=\"background: #dcfce7;\"><div class=\"number\" style=\"color: #166534;\">' + greenCount + '</div><div class=\"label\">GREEN</div></div><div class=\"summary-card\" style=\"background: #fef9c3;\"><div class=\"number\" style=\"color: #854d0e;\">' + yellowCount + '</div><div class=\"label\">YELLOW</div></div><div class=\"summary-card\" style=\"background: #fee2e2;\"><div class=\"number\" style=\"color: #991b1b;\">' + redCount + '</div><div class=\"label\">RED</div></div></div><div class=\"recommendation\" style=\"background: ' + rec.bg + ';\"><div class=\"label\" style=\"color: ' + rec.text + ';\">' + rec.label + '</div></div><div class=\"section\"><h2>MSA Criteria (' + msaCriteria.length + ' points)</h2><table><thead><tr><th>ID</th><th>Metric</th><th>Threshold</th><th>Value</th><th>Status</th><th>Reasoning</th></tr></thead><tbody>' + msaCriteria.map(buildRow).join('') + '</tbody></table></div><div class=\"section\"><h2>Sub-Market Criteria (' + subCriteria.length + ' points)</h2><table><thead><tr><th>ID</th><th>Metric</th><th>Threshold</th><th>Value</th><th>Status</th><th>Reasoning</th></tr></thead><tbody>' + subCriteria.map(buildRow).join('') + '</tbody></table></div><div class=\"footer\"><p>AI Multifamily Deep Research Engine | 30-Point Heat Map Analysis</p></div></body></html>';\n\nreturn {\n  html: html,\n  deal_name: dealName,\n  address: address,\n  recommendation: recommendation,\n  heat_map: heatMap,\n  green_count: greenCount,\n  yellow_count: yellowCount,\n  red_count: redCount\n};"
       },
-      "id": "39d2970a-906e-48d0-a5ae-cbe8ad015519",
+      "id": "4cec717e-d434-4737-a309-fd834ae0212e",
       "name": "Build Heat Map HTML",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [9760, 4464]
+      "position": [12544, 4416]
     },
     {
       "parameters": {
@@ -188,11 +188,11 @@
           "timeout": 60000
         }
       },
-      "id": "8968c5f5-5e21-41db-9884-24b31fade9d0",
+      "id": "b6a7caee-7a68-4596-8f77-e71398ea1e5e",
       "name": "Generate PDF (PDF Noodle)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [10000, 4464],
+      "position": [12784, 4416],
       "credentials": {
         "httpHeaderAuth": {
           "id": "Bxqxa3dsLKy0qd4b",
@@ -206,128 +206,43 @@
         "responseBody": "={\n  \"status\": \"success\",\n  \"deal_name\": \"{{ $('Build Heat Map HTML').first().json.deal_name }}\",\n  \"address\": \"{{ $('Build Heat Map HTML').first().json.address }}\",\n  \"analysis_summary\": {\n    \"total_criteria\": 30,\n    \"green_count\": {{ $('Build Heat Map HTML').first().json.green_count }},\n    \"yellow_count\": {{ $('Build Heat Map HTML').first().json.yellow_count }},\n    \"red_count\": {{ $('Build Heat Map HTML').first().json.red_count }},\n    \"recommendation\": \"{{ $('Build Heat Map HTML').first().json.recommendation }}\"\n  },\n  \"heat_map\": {{ JSON.stringify($('Build Heat Map HTML').first().json.heat_map) }},\n  \"pdf_url\": \"{{ $('Generate PDF (PDF Noodle)').first().json.signedUrl }}\",\n  \"generated_at\": \"{{ $now.toISO() }}\"\n}",
         "options": {}
       },
-      "id": "96587ac2-94cd-4613-8fe1-2a1cbd59fa8c",
+      "id": "504c3109-35bf-48f1-b6a6-da96912c7e39",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [10240, 4464]
+      "position": [13024, 4416]
     }
   ],
   "connections": {
     "Webhook Trigger": {
-      "main": [
-        [
-          {
-            "node": "Extract Input Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Extract Input Data", "type": "main", "index": 0}]]
     },
     "Extract Input Data": {
-      "main": [
-        [
-          {
-            "node": "Perplexity Research",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Parse Context Docs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Perplexity Research", "type": "main", "index": 0}, {"node": "Parse Context Docs", "type": "main", "index": 0}]]
     },
     "Parse Context Docs": {
-      "main": [
-        [
-          {
-            "node": "Wait For All Inputs",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
+      "main": [[{"node": "Wait For All Inputs", "type": "main", "index": 1}]]
     },
     "Perplexity Research": {
-      "main": [
-        [
-          {
-            "node": "Wait For All Inputs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Wait For All Inputs", "type": "main", "index": 0}]]
     },
     "Wait For All Inputs": {
-      "main": [
-        [
-          {
-            "node": "Prepare Gemini Input",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Prepare Gemini Input", "type": "main", "index": 0}]]
     },
     "Prepare Gemini Input": {
-      "main": [
-        [
-          {
-            "node": "Gemini Logic Engine",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Gemini Logic Engine", "type": "main", "index": 0}]]
     },
     "Gemini Logic Engine": {
-      "main": [
-        [
-          {
-            "node": "Validate Heat Map",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Validate Heat Map", "type": "main", "index": 0}]]
     },
     "Validate Heat Map": {
-      "main": [
-        [
-          {
-            "node": "Build Heat Map HTML",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Build Heat Map HTML", "type": "main", "index": 0}]]
     },
     "Build Heat Map HTML": {
-      "main": [
-        [
-          {
-            "node": "Generate PDF (PDF Noodle)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Generate PDF (PDF Noodle)", "type": "main", "index": 0}]]
     },
     "Generate PDF (PDF Noodle)": {
-      "main": [
-        [
-          {
-            "node": "Webhook Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
     }
   },
   "pinData": {},
