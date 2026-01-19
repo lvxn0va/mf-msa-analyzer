@@ -5,11 +5,14 @@ created: '2026-01-18'
 status: 'Ready for Implementation'
 ---
 
-# AI Multifamily Deep Research Engine - Epic Breakdown
+# AI Multifamily Deep Research Engine - Epic Breakdown (GEMINI VARIANT)
 
 ## Overview
 
-This document provides the complete epic and story breakdown for the AI Multifamily Deep Research & Decision Engine, decomposing the requirements from the PRD and Architecture into implementable stories.
+This document provides the complete epic and story breakdown for the AI Multifamily Deep Research & Decision Engine **using Gemini for deep research** instead of Perplexity. This is a parallel development track to compare research quality between providers.
+
+**Branch:** `claude/gemini-deep-research-engine`
+**Comparison Branch:** `claude/ai-multifamily-research-engine-bsVW3` (Perplexity version)
 
 ---
 
@@ -81,8 +84,8 @@ This document provides the complete epic and story breakdown for the AI Multifam
 1. **Epic 1: Infrastructure & Environment Setup**
 2. **Epic 2: Data Schema & Validation Framework**
 3. **Epic 3: n8n Workflow Orchestration**
-4. **Epic 4: Research Engine (Perplexity Integration)**
-5. **Epic 5: Logic Engine (Gemini Integration)**
+4. **Epic 4: Research Engine (Gemini Deep Research)** ← CHANGED FROM PERPLEXITY
+5. **Epic 5: Logic Engine (Gemini Evaluation)**
 6. **Epic 6: Context Override System**
 7. **Epic 7: PDF Generation Service**
 8. **Epic 8: Frontend Integration**
@@ -134,7 +137,8 @@ So that services can authenticate with external providers.
 **Given** the shell configuration is loaded
 **When** I check for `GEMINI_API_KEY`
 **Then** the variable is set and accessible
-**And** Perplexity, Google Cloud credentials are documented in .env.example
+**And** Google Cloud credentials are documented in .env.example
+**Note:** No Perplexity credentials needed - Gemini handles all research
 
 ---
 
@@ -246,16 +250,18 @@ So that the user can download their analysis.
 
 ---
 
-## Epic 4: Research Engine (Perplexity Integration)
+## Epic 4: Research Engine (Gemini Deep Research)
 
-**Goal:** Implement live demographic research using Perplexity Deep Research API.
+**Goal:** Implement live demographic research using Gemini Deep Research with Google Search grounding.
 
-**Status:** COMPLETE (async deep research with sonar-deep-research model)
+**Status:** READY FOR IMPLEMENTATION
+
+**Key Differentiator:** Uses Gemini's native deep research capabilities with grounding to perform comprehensive multi-query research similar to the sample outputs in the Background folder.
 
 ### Story 4.1: Research Prompt Construction
 
 As the Research Engine,
-I want a system prompt that guides demographic research,
+I want a system prompt that guides Gemini deep research,
 So that I gather all required data with citations.
 
 **Acceptance Criteria:**
@@ -264,19 +270,21 @@ So that I gather all required data with citations.
 **When** I construct the research prompt
 **Then** it requests 1-mile, 3-mile, and 5-mile radius data
 **And** it specifies exact data points: population, crime, schools, amenities, transport
+**And** it leverages Gemini's grounding for real-time data
 
-### Story 4.2: Perplexity API Integration
+### Story 4.2: Gemini Deep Research API Integration
 
 As the n8n workflow,
-I want to call Perplexity Sonar-Pro API,
-So that I can perform live web research with citations.
+I want to call Gemini Deep Research API with grounding,
+So that I can perform comprehensive live web research with citations.
 
 **Acceptance Criteria:**
 
 **Given** I have the constructed research prompt
-**When** I call the Perplexity API via HTTP Request
+**When** I call Gemini with deep research/grounding enabled
 **Then** I receive structured research data
-**And** each data point includes source URL and date
+**And** each data point includes source URL and citation
+**And** research quality matches or exceeds sample outputs in Background folder
 
 ### Story 4.3: Research Data Normalization
 
@@ -286,7 +294,7 @@ So that the Logic Engine receives consistent input.
 
 **Acceptance Criteria:**
 
-**Given** I receive raw Perplexity response
+**Given** I receive raw Gemini research response
 **When** I normalize the data
 **Then** output has `msa_data` and `submarket_data` sections
 **And** each metric is mapped to its corresponding criterion ID
@@ -660,9 +668,10 @@ So that the orchestration layer is production-ready.
 **Acceptance Criteria:**
 
 **Given** n8n is deployed (Cloud or Docker)
-**When** I import main-workflow.json
+**When** I import main-workflow.json (Gemini variant)
 **Then** all nodes are configured correctly
-**And** credentials are set up for Perplexity, Gemini, Google Drive
+**And** credentials are set up for Gemini API, Google Drive
+**Note:** Single AI provider (Gemini) for both research and evaluation
 
 ### Story 10.3: Cloud Storage Configuration
 
@@ -704,5 +713,21 @@ So that issues are detected and resolved quickly.
 
 ---
 
+## Gemini vs Perplexity Comparison Notes
+
+This branch uses **Gemini Deep Research** instead of Perplexity. Key differences:
+
+| Aspect | Perplexity Branch | Gemini Branch |
+|--------|------------------|---------------|
+| Research Model | sonar-deep-research | Gemini with grounding |
+| API Pattern | Async (7 min wait) | TBD |
+| Evaluation Model | gemini-2.5-flash | gemini-2.5-flash |
+| Expected Quality | Good citations | Match Background samples |
+
+**Goal:** Compare output quality to determine best research provider for production.
+
+---
+
 _Document generated: 2026-01-18_
+_Modified for Gemini variant: 2026-01-19_
 _Based on: PRD.md, ARCHITECTURE.md, project-context.md_

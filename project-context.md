@@ -1,14 +1,20 @@
 ---
-project_name: 'AI Multifamily Deep Research & Decision Engine'
+project_name: 'AI Multifamily Deep Research & Decision Engine (GEMINI VARIANT)'
 user_name: 'shihaya'
 date: '2026-01-18'
+modified: '2026-01-19'
+variant: 'gemini-research'
+branch: 'claude/gemini-deep-research-engine'
 sections_completed: ['technology_stack', 'implementation_rules', 'architecture', 'testing', 'business_logic']
 existing_patterns_found: 12
 ---
 
-# Project Context for AI Agents
+# Project Context for AI Agents (GEMINI VARIANT)
 
 _This file contains critical rules and patterns that AI agents must follow when implementing code in this project. Focus on unobvious details that agents might otherwise miss._
+
+**VARIANT NOTE:** This branch uses **Gemini for deep research** instead of Perplexity.
+The Perplexity version is preserved at branch `claude/ai-multifamily-research-engine-bsVW3`.
 
 ---
 
@@ -18,9 +24,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 |-----------|------------|---------------|
 | Runtime | Python | 3.13 |
 | Orchestrator | n8n | Self-hosted or Cloud |
-| Logic Engine | Google Gemini 3 Pro | Via Vertex AI, temperature=0.1 |
-| Research Engine | Perplexity Sonar-Pro | Via HTTP Request |
-| PDF Service | FastAPI + ReportLab | Port 8000 |
+| Logic Engine | Google Gemini | gemini-2.5-flash, temperature=0.1 |
+| **Research Engine** | **Google Gemini Deep Research** | **With grounding (Google Search)** |
+| PDF Service | PDF Noodle API | Cloud service |
 | Frontend | Lovable.dev (React) | Future |
 | Storage | Google Drive / GCS | For PDFs |
 | Testing | pytest | venv-tests/ |
@@ -55,7 +61,7 @@ RED    = Fails threshold, deal-killer unless exceptional circumstances
 ### 3. Context Override Hierarchy (Priority Order)
 ```
 Tier 1 (HIGHEST): User-uploaded documents (tax abatement, rent rolls, appraisals)
-Tier 2: Live research data (Perplexity results)
+Tier 2: Live research data (Gemini Deep Research with grounding)
 Tier 3 (LOWEST): General market data (Census, CoStar)
 ```
 When override applied, set `override_applied: true` and `override_document: "<filename>"`

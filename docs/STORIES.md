@@ -1,16 +1,20 @@
 ---
-project: 'AI Multifamily Deep Research Engine'
+project: 'AI Multifamily Deep Research Engine (GEMINI VARIANT)'
 created: '2026-01-18'
 last_updated: '2026-01-19'
 total_stories: 32
-completed: 22
+completed: 18
 in_progress: 0
-pending: 10
+pending: 14
+variant: 'gemini-research'
 ---
 
-# User Stories Backlog
+# User Stories Backlog (GEMINI VARIANT)
 
-This document contains detailed, sprint-ready user stories for the AI Multifamily Deep Research & Decision Engine. Stories are organized by epic and include full acceptance criteria in Given/When/Then format.
+This document contains detailed, sprint-ready user stories for the AI Multifamily Deep Research & Decision Engine **using Gemini for deep research**.
+
+**Branch:** `claude/gemini-deep-research-engine`
+**Comparison:** Perplexity version at `claude/ai-multifamily-research-engine-bsVW3`
 
 ---
 
@@ -79,7 +83,7 @@ So that new team members can configure their environment.
 | AC | Given | When | Then |
 |----|-------|------|------|
 | 1.3.1 | I am setting up the project | I view `.env.example` | I see all required API keys listed |
-| 1.3.2 | Required keys include | - | GEMINI_API_KEY, PERPLEXITY_API_KEY, GOOGLE_CLOUD_PROJECT |
+| 1.3.2 | Required keys include | - | GEMINI_API_KEY, GOOGLE_CLOUD_PROJECT (no Perplexity needed) |
 | 1.3.3 | The file exists | I copy to `.env` | I can fill in my credentials |
 
 **Tasks:**
@@ -221,48 +225,60 @@ So that failures are captured and reported.
 
 ---
 
-## Epic 4: Research Engine (Perplexity Integration)
+## Epic 4: Research Engine (Gemini Deep Research)
 
 ### Story 4.1: Research Prompt Template
-**Status:** COMPLETE
+**Status:** READY (needs Gemini adaptation)
 
 **Story:**
 As the Research Engine,
-I want a prompt template for demographic research,
-So that Perplexity gathers all required data points.
+I want a prompt template for Gemini deep research with grounding,
+So that Gemini gathers all required data points with citations.
 
 **Acceptance Criteria:**
 
 | AC | Given | When | Then |
 |----|-------|------|------|
-| 4.1.1 | I access `prompts/perplexity-research-prompt.txt` | I read it | Prompt requests 1-3-5 mile data |
+| 4.1.1 | I access `prompts/gemini-research-prompt.txt` | I read it | Prompt requests 1-3-5 mile data |
 | 4.1.2 | Prompt specifies | Data points | Population, crime, schools, amenities, transport |
-| 4.1.3 | Prompt requires | Citations | Source URL and date for each data point |
+| 4.1.3 | Prompt requires | Citations | Source URL and grounding references |
+| 4.1.4 | Prompt enables | Grounding | Uses Google Search for real-time data |
+
+**Tasks:**
+- [ ] Create `prompts/gemini-research-prompt.txt`
+- [ ] Enable grounding configuration in prompt
+- [ ] Test with sample addresses
 
 ---
 
-### Story 4.2: Perplexity Deep Research Integration
-**Status:** COMPLETE
+### Story 4.2: Gemini Deep Research Integration
+**Status:** READY
 
 **Story:**
 As the n8n workflow,
-I want to call Perplexity Deep Research API (sonar-deep-research),
+I want to call Gemini with Deep Research/Grounding enabled,
 So that I gather comprehensive live demographic research with citations.
 
 **Acceptance Criteria:**
 
 | AC | Given | When | Then |
 |----|-------|------|------|
-| 4.2.1 | I have PERPLEXITY_API_KEY | I call the async API | Job ID is returned |
-| 4.2.2 | Async job completes | I retrieve results | Comprehensive research data with citations |
+| 4.2.1 | I have GEMINI_API_KEY | I call Gemini with grounding | Research data is returned |
+| 4.2.2 | Grounding is enabled | I query for demographics | Real-time data with citations |
 | 4.2.3 | Response is received | Data includes | All 30 data points with source URLs |
-| 4.2.4 | Response time | Is measured | ~7 minutes (deep research) |
+| 4.2.4 | Research quality | Is compared | Matches or exceeds Background folder samples |
 
 **Implementation Notes:**
-- Uses async API: POST `/async/chat/completions` → Wait 7 min → GET `/{id}`
-- Model: `sonar-deep-research` (20-50 queries, 200+ sources)
-- Returns comprehensive data with numbered citations
-- Configured with n8n HTTP Header Auth credential
+- Uses Gemini API with grounding/deep research enabled
+- Model: TBD (gemini-2.0-flash with grounding or deep research mode)
+- Single API call pattern (vs Perplexity async)
+- Must match quality of sample outputs in Background folder
+
+**Tasks:**
+- [ ] Research Gemini deep research API options
+- [ ] Configure grounding in n8n HTTP Request
+- [ ] Test research quality vs Perplexity
+- [ ] Create new workflow nodes
 
 ---
 
@@ -278,13 +294,13 @@ So that no hallucinated sources appear in reports.
 
 | AC | Given | When | Then |
 |----|-------|------|------|
-| 4.3.1 | Research returns citations | Each source | Has URL and date |
-| 4.3.2 | Citation format | Is standardized | "Source Name, Year, Section/Page" |
+| 4.3.1 | Research returns citations | Each source | Has URL and grounding reference |
+| 4.3.2 | Citation format | Is standardized | Gemini grounding format |
 | 4.3.3 | Missing citation | For any data point | Data point flagged for review |
 
 **Tasks:**
-- [ ] Parse citation fields from Perplexity response
-- [ ] Validate URL format
+- [ ] Parse grounding metadata from Gemini response
+- [ ] Validate source URLs
 - [ ] Standardize citation format for PDF output
 
 ---
@@ -712,15 +728,16 @@ So that I can track system health and performance.
 
 ---
 
-## Sprint Planning Summary
+## Sprint Planning Summary (GEMINI VARIANT)
 
-### Sprint 1: Core Integration ✅ COMPLETE
+### Sprint 1: Gemini Research Integration ← CURRENT
 - ✅ Story 3.1: Webhook Trigger Configuration
-- ✅ Story 4.2: Perplexity Deep Research Integration (async API)
+- ⬜ Story 4.1: Research Prompt Template (Gemini adaptation)
+- ⬜ Story 4.2: Gemini Deep Research Integration
 - ✅ Story 5.2: Gemini Logic Engine Integration
 - ✅ Story 7.2: Heat Map PDF Generation (PDF Noodle)
 
-### Sprint 2 (Current): Context Overrides & Enhancement
+### Sprint 2: Context Overrides & Enhancement
 - Story 6.1: Document Type Detection
 - Story 6.2: Tax Abatement Override
 - Story 6.3: Rent Roll Override
@@ -741,24 +758,27 @@ So that I can track system health and performance.
 
 ---
 
-## Current System Status
+## Current System Status (GEMINI VARIANT)
 
-**Workflow ID:** `sEnr0eTo6EDsg2Tz`
-**Webhook URL:** `https://n8n.flowbaby.net/webhook/analyze-property`
+**Branch:** `claude/gemini-deep-research-engine`
+**Status:** Research integration pending
 
-**Working End-to-End:**
+**Architecture:**
 1. Webhook receives address + deal_name
-2. Perplexity Deep Research (~7 min) gathers all 30 data points
+2. **Gemini Deep Research** (grounding) gathers all 30 data points ← NEW
 3. Gemini evaluates and generates 30-point heat map
 4. PDF Noodle generates color-coded Heat Map PDF
 5. Response returns JSON with analysis + PDF URL
 
-**Test Command:**
-```bash
-./scripts/test-workflow.sh "123 Main St, Dallas, TX" "Test Deal"
-```
+**Next Steps:**
+1. Research Gemini deep research/grounding API options
+2. Create new workflow with Gemini research nodes
+3. Test and compare output quality vs Perplexity version
+
+**Comparison Branch:** `claude/ai-multifamily-research-engine-bsVW3` (Perplexity - working)
 
 ---
 
 _Document updated: 2026-01-19_
-_Total stories: 32 | Complete: 22 | Ready: 10_
+_Variant: Gemini Deep Research_
+_Total stories: 32 | Complete: 18 | Ready: 14_
