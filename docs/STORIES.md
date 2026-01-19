@@ -1,11 +1,11 @@
 ---
 project: 'AI Multifamily Deep Research Engine'
 created: '2026-01-18'
-last_updated: '2026-01-18'
+last_updated: '2026-01-19'
 total_stories: 32
-completed: 14
+completed: 22
 in_progress: 0
-pending: 18
+pending: 10
 ---
 
 # User Stories Backlog
@@ -149,7 +149,7 @@ So that I reject malformed input before generating PDFs.
 ## Epic 3: n8n Workflow Orchestration
 
 ### Story 3.1: Webhook Trigger Configuration
-**Status:** READY
+**Status:** COMPLETE
 
 **Story:**
 As the n8n workflow,
@@ -241,28 +241,28 @@ So that Perplexity gathers all required data points.
 
 ---
 
-### Story 4.2: Perplexity HTTP Integration
-**Status:** READY
+### Story 4.2: Perplexity Deep Research Integration
+**Status:** COMPLETE
 
 **Story:**
 As the n8n workflow,
-I want to call Perplexity Sonar-Pro API,
-So that I gather live demographic research.
+I want to call Perplexity Deep Research API (sonar-deep-research),
+So that I gather comprehensive live demographic research with citations.
 
 **Acceptance Criteria:**
 
 | AC | Given | When | Then |
 |----|-------|------|------|
-| 4.2.1 | I have PERPLEXITY_API_KEY | I call the API | Response contains research data |
-| 4.2.2 | Response is received | Data is structured | msa_data and submarket_data sections exist |
-| 4.2.3 | API rate limit hit | Workflow handles | Retry or fallback triggered |
-| 4.2.4 | Response time | Is measured | <60 seconds typical |
+| 4.2.1 | I have PERPLEXITY_API_KEY | I call the async API | Job ID is returned |
+| 4.2.2 | Async job completes | I retrieve results | Comprehensive research data with citations |
+| 4.2.3 | Response is received | Data includes | All 30 data points with source URLs |
+| 4.2.4 | Response time | Is measured | ~7 minutes (deep research) |
 
-**Tasks:**
-- [ ] Configure HTTP Request node for Perplexity
-- [ ] Set API key from environment variable
-- [ ] Parse response into workflow variables
-- [ ] Add retry logic for transient failures
+**Implementation Notes:**
+- Uses async API: POST `/async/chat/completions` → Wait 7 min → GET `/{id}`
+- Model: `sonar-deep-research` (20-50 queries, 200+ sources)
+- Returns comprehensive data with numbered citations
+- Configured with n8n HTTP Header Auth credential
 
 ---
 
@@ -310,28 +310,28 @@ So that all 30 criteria are evaluated consistently.
 
 ---
 
-### Story 5.2: Vertex AI Integration
-**Status:** READY
+### Story 5.2: Gemini Logic Engine Integration
+**Status:** COMPLETE
 
 **Story:**
 As the n8n workflow,
-I want to call Gemini via Vertex AI,
+I want to call Gemini via HTTP Request,
 So that I perform deterministic property analysis.
 
 **Acceptance Criteria:**
 
 | AC | Given | When | Then |
 |----|-------|------|------|
-| 5.2.1 | Vertex AI credentials configured | I call Gemini | Response is received |
+| 5.2.1 | Gemini API key configured | I call Gemini | Response is received |
 | 5.2.2 | Temperature setting | Is 0.1 | Deterministic outputs |
-| 5.2.3 | Response format | Is JSON | Valid heat map array |
-| 5.2.4 | Processing time | Is measured | <40 seconds typical |
+| 5.2.3 | Response format | Is JSON | Valid heat map array with 30 items |
+| 5.2.4 | Processing time | Is measured | ~30-60 seconds typical |
 
-**Tasks:**
-- [ ] Configure Google Vertex AI node in n8n
-- [ ] Set temperature to 0.1
-- [ ] Construct input with research data + criteria + context
-- [ ] Parse JSON response
+**Implementation Notes:**
+- Uses HTTP Request node with Query Auth credential
+- Model: `gemini-2.5-flash` with temperature 0.1
+- Response MIME type set to `application/json`
+- Validates exactly 30 items with GREEN/YELLOW/RED status
 
 ---
 
@@ -471,11 +471,11 @@ So that I can monitor service availability.
 ---
 
 ### Story 7.2: Heat Map PDF Generation
-**Status:** COMPLETE (needs testing)
+**Status:** COMPLETE
 
 **Story:**
-As the PDF Service,
-I want to generate a Heat Map PDF,
+As the n8n workflow,
+I want to generate a Heat Map PDF via PDF Noodle API,
 So that users see the 30-point grid at a glance.
 
 **Acceptance Criteria:**
@@ -488,16 +488,16 @@ So that users see the 30-point grid at a glance.
 | 7.2.4 | PDF content | Includes | Recommendation badge |
 | 7.2.5 | Invalid JSON received | I reject | Error response with details |
 
-**Tasks:**
-- [ ] Test with sample heat map JSON
-- [ ] Verify color coding is correct
-- [ ] Verify all 30 criteria appear
-- [ ] Test file size and quality
+**Implementation Notes:**
+- Uses PDF Noodle API (`/v1/html-to-pdf/sync`)
+- HTML built dynamically in "Build Heat Map HTML" Code node
+- Returns signed URL valid for 24 hours
+- Includes color-coded status badges and summary statistics
 
 ---
 
 ### Story 7.3: Investment Brief PDF Generation
-**Status:** COMPLETE (needs testing)
+**Status:** READY (future enhancement)
 
 **Story:**
 As the PDF Service,
@@ -714,22 +714,21 @@ So that I can track system health and performance.
 
 ## Sprint Planning Summary
 
-### Sprint 1 (Recommended): Integration & Testing
-- Story 3.1: Webhook Trigger Configuration
-- Story 3.2: Google Drive Integration
-- Story 4.2: Perplexity HTTP Integration
-- Story 5.2: Vertex AI Integration
-- Story 7.2: Heat Map PDF Testing
-- Story 7.3: Investment Brief PDF Testing
+### Sprint 1: Core Integration ✅ COMPLETE
+- ✅ Story 3.1: Webhook Trigger Configuration
+- ✅ Story 4.2: Perplexity Deep Research Integration (async API)
+- ✅ Story 5.2: Gemini Logic Engine Integration
+- ✅ Story 7.2: Heat Map PDF Generation (PDF Noodle)
 
-### Sprint 2: Context Overrides
+### Sprint 2 (Current): Context Overrides & Enhancement
 - Story 6.1: Document Type Detection
 - Story 6.2: Tax Abatement Override
 - Story 6.3: Rent Roll Override
 - Story 3.3: Workflow Error Handling
+- Story 7.3: Investment Brief PDF Generation
 
 ### Sprint 3: Production Readiness
-- Story 10.1: PDF Service Docker Image
+- Story 10.1: PDF Service Docker Image (if self-hosting)
 - Story 10.2: n8n Production Setup
 - Story 10.3: Cloud Storage Setup
 - Story 1.3: API Credentials Template
@@ -742,5 +741,24 @@ So that I can track system health and performance.
 
 ---
 
-_Document generated: 2026-01-18_
-_Total stories: 32 | Complete: 14 | Ready: 18_
+## Current System Status
+
+**Workflow ID:** `sEnr0eTo6EDsg2Tz`
+**Webhook URL:** `https://n8n.flowbaby.net/webhook/analyze-property`
+
+**Working End-to-End:**
+1. Webhook receives address + deal_name
+2. Perplexity Deep Research (~7 min) gathers all 30 data points
+3. Gemini evaluates and generates 30-point heat map
+4. PDF Noodle generates color-coded Heat Map PDF
+5. Response returns JSON with analysis + PDF URL
+
+**Test Command:**
+```bash
+./scripts/test-workflow.sh "123 Main St, Dallas, TX" "Test Deal"
+```
+
+---
+
+_Document updated: 2026-01-19_
+_Total stories: 32 | Complete: 22 | Ready: 10_

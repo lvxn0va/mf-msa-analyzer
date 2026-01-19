@@ -39,7 +39,7 @@ This document provides the complete epic and story breakdown for the AI Multifam
 
 | ID | Requirement | Target |
 |----|-------------|--------|
-| NFR-01 | Analysis completion time | <3 minutes |
+| NFR-01 | Analysis completion time | ~8-9 minutes (deep research) |
 | NFR-02 | PDF generation time | <30 seconds |
 | NFR-03 | System uptime | 99.5% |
 | NFR-04 | Daily throughput (MVP) | 100+ analyses |
@@ -248,9 +248,9 @@ So that the user can download their analysis.
 
 ## Epic 4: Research Engine (Perplexity Integration)
 
-**Goal:** Implement live demographic research using Perplexity Sonar-Pro API.
+**Goal:** Implement live demographic research using Perplexity Deep Research API.
 
-**Status:** PROMPT COMPLETE (prompts exist, integration pending)
+**Status:** COMPLETE (async deep research with sonar-deep-research model)
 
 ### Story 4.1: Research Prompt Construction
 
@@ -297,7 +297,7 @@ So that the Logic Engine receives consistent input.
 
 **Goal:** Implement the AI-powered evaluation engine that applies the 30-point criteria.
 
-**Status:** PROMPT COMPLETE (prompts exist, integration pending)
+**Status:** COMPLETE (gemini-2.5-flash via HTTP Request with temperature 0.1)
 
 ### Story 5.1: Gemini System Prompt Configuration
 
@@ -419,9 +419,9 @@ So that user documents take precedence in evaluation.
 
 ## Epic 7: PDF Generation Service
 
-**Goal:** Build the FastAPI service that generates professional-quality PDF reports.
+**Goal:** Generate professional-quality PDF reports via PDF Noodle API.
 
-**Status:** STRUCTURE COMPLETE (needs testing)
+**Status:** COMPLETE (PDF Noodle API integration, HTML-to-PDF with signed URLs)
 
 ### Story 7.1: FastAPI Application Setup
 
